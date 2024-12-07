@@ -9,39 +9,35 @@ export default function NavBar() {
       <div className="container mx-auto px-6">
         <div className="flex h-14 items-center justify-between">
           <div className="flex">
-            <Link href="/">
-              <a className={cn(
+            <Link href="/"
+              className={cn(
                 "text-lg font-semibold transition-colors hover:text-primary",
                 location === "/" ? "text-primary" : "text-gray-500"
               )}>
-                Video Content Hub
-              </a>
+              Video Content Hub
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/">
-              <a className={cn(
+            <Link href="/"
+              className={cn(
                 "text-sm transition-colors hover:text-primary",
                 location === "/" ? "text-primary" : "text-gray-500"
               )}>
-                Dashboard
-              </a>
+              Dashboard
             </Link>
-            <Link href="/processing">
-              <a className={cn(
+            <Link href="/processing"
+              className={cn(
                 "text-sm transition-colors hover:text-primary",
                 location === "/processing" ? "text-primary" : "text-gray-500"
               )}>
-                Video Processing
-              </a>
+              Video Processing
             </Link>
-            <Link href="/analysis">
-              <a className={cn(
+            <Link href="/analysis"
+              className={cn(
                 "text-sm transition-colors hover:text-primary",
                 location === "/analysis" ? "text-primary" : "text-gray-500"
               )}>
-                Video Analysis
-              </a>
+              Video Analysis
             </Link>
           </div>
         </div>

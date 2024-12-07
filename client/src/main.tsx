@@ -20,7 +20,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/video/:id" component={VideoEditor} />
         <Route path="/processing" component={VideoProcessing} />
-        <Route path="/analysis" component={Dashboard} />
+        <Route path="/analysis" component={VideoEditor} />
         <Route>404 Page Not Found</Route>
       </Switch>
     </div>

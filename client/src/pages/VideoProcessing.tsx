@@ -1,7 +1,9 @@
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Video } from "@db/schema";
+import { Video, Keyframe } from "@db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Play, FileVideo, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { fetchVideos } from "../lib/api";
@@ -74,11 +76,60 @@ export default function VideoProcessing() {
                   <AccordionTrigger>Frame Summaries</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
-                      {/* TODO: Add frame summaries here */}
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <AlertCircle size={20} />
-                        <p>Frame summaries will be generated when processing is complete.</p>
-                      </div>
+                      {video.keyframes?.map((keyframe) => (
+                        <div key={keyframe.id} className="border rounded-lg p-4">
+                          <div className="flex items-center gap-4 mb-2">
+                            {keyframe.thumbnailUrl && (
+                              <img
+                                src={keyframe.thumbnailUrl}
+                                alt={`Frame at ${keyframe.timestamp}s`}
+                                className="w-24 h-24 object-cover rounded-lg"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                Timestamp: {new Date(keyframe.timestamp * 1000).toISOString().substr(11, 8)}
+                              </p>
+                              {keyframe.metadata && (
+                                <div className="text-sm text-gray-500">
+                                  <p className="font-medium">Description:</p>
+                                  <p>{keyframe.metadata.description}</p>
+                                  {keyframe.metadata.objects?.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="font-medium">Objects:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {keyframe.metadata.objects.map((obj, i) => (
+                                          <Badge key={i} variant="secondary">
+                                            {obj}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {keyframe.metadata.actions?.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="font-medium">Actions:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {keyframe.metadata.actions.map((action, i) => (
+                                          <Badge key={i} variant="secondary">
+                                            {action}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {(!video.keyframes || video.keyframes.length === 0) && (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <AlertCircle size={20} />
+                          <p>Frame summaries will be generated when processing is complete.</p>
+                        </div>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
