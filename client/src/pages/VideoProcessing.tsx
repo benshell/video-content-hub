@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Video, Keyframe } from "@db/schema";
+import type { Video } from "@db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,21 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+interface VideoWithKeyframes extends Video {
+  keyframes?: Array<{
+    id: number;
+    timestamp: number;
+    thumbnailUrl?: string;
+    metadata?: {
+      description: string;
+      objects: string[];
+      actions: string[];
+    };
+  }>;
+}
+
 export default function VideoProcessing() {
-  const { data: videos, isLoading } = useQuery<Video[]>({
+  const { data: videos, isLoading } = useQuery<VideoWithKeyframes[]>({
     queryKey: ["videos"],
     queryFn: fetchVideos
   });
