@@ -14,7 +14,7 @@ interface ReviewAgentProps {
 }
 
 // Simulated AI suggestions based on existing tags
-function generateAISuggestions(tags: Tag[]): Array<{ name: string; confidence: number; timestamp: number }> {
+function generateAISuggestions(tags: Tag[], videoDuration: number): Array<{ name: string; confidence: number; timestamp: number }> {
   const existingConcepts = new Set(tags.map(t => t.name.toLowerCase()));
   const suggestions = [
     { name: "Person", confidence: 95 },
@@ -28,7 +28,7 @@ function generateAISuggestions(tags: Tag[]): Array<{ name: string; confidence: n
     .filter(s => !existingConcepts.has(s.name.toLowerCase()))
     .map(s => ({
       ...s,
-      timestamp: Math.floor(Math.random() * (video.duration || 100))
+      timestamp: Math.floor(Math.random() * (videoDuration || 100))
     }));
 }
 
@@ -50,9 +50,9 @@ export default function ReviewAgent({ video }: ReviewAgentProps) {
 
   useEffect(() => {
     // Simulate AI processing
-    const aiSuggestions = generateAISuggestions(video.tags);
+    const aiSuggestions = generateAISuggestions(video.tags, video.duration || 100);
     setSuggestions(aiSuggestions);
-  }, [video.tags]);
+  }, [video.tags, video.duration]);
 
   const handleAcceptSuggestion = (suggestion: typeof suggestions[0]) => {
     createTagMutation.mutate({

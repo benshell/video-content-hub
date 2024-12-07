@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,7 +103,7 @@ export default function VideoUpload({ onSuccess }: VideoUploadProps) {
 
         <Button
           disabled={!title || uploadMutation.isLoading}
-          onClick={() => document.querySelector('input[type="file"]')?.click()}
+          onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
           className="w-full"
         >
           {uploadMutation.isLoading ? "Uploading..." : "Upload Video"}

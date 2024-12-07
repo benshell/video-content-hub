@@ -16,7 +16,7 @@ export default function VideoEditor() {
   const { id } = useParams();
   const { data: video, isLoading } = useQuery<VideoDetails>({
     queryKey: ["video", id],
-    queryFn: () => fetchVideoDetails(parseInt(id))
+    queryFn: () => fetchVideoDetails(parseInt(id || "0"))
   });
 
   if (isLoading) {
