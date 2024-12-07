@@ -95,9 +95,18 @@ export function registerRoutes(app: Express) {
 
       // Process video frames in the background
       processVideo(video.id, videoPath)
-        .catch(error => {
+        .then(() => {
+          // Update processing status to completed
+          return db.update(videos)
+            .set({ processingStatus: 'completed' })
+            .where(eq(videos.id, video.id));
+        })
+        .catch(async error => {
           console.error('Error processing video:', error);
-          // Log the error but don't fail the upload
+          // Update processing status to failed
+          await db.update(videos)
+            .set({ processingStatus: 'failed' })
+            .where(eq(videos.id, video.id));
         });
 
       res.json(video);

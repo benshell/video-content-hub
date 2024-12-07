@@ -208,7 +208,7 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
   try {
     console.log("Starting frame analysis with GPT-4 Vision...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-0125",
+      model: "gpt-4-vision-preview",
       messages: [
         {
           role: "user",
@@ -250,10 +250,7 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
             },
             {
               type: "image", 
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-                detail: "high"
-              }
+              image_url: `data:image/jpeg;base64,${base64Image}`
             }
           ]
         }
