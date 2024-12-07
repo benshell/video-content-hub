@@ -4,9 +4,17 @@ import { videos, tags, keyframes } from "@db/schema";
 import { eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
+import express from "express";
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-  destination: 'uploads/',
+  destination: uploadsDir,
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}${path.extname(file.originalname)}`);
   }
@@ -15,6 +23,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 export function registerRoutes(app: Express) {
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static(uploadsDir));
   // Video management
   app.post('/api/videos', upload.single('video'), async (req, res) => {
     try {
