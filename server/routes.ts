@@ -6,11 +6,18 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from "express";
+import { processVideo } from "./services/videoProcessor";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Ensure frames directory exists
+const framesDir = path.join(uploadsDir, 'frames');
+if (!fs.existsSync(framesDir)) {
+  fs.mkdirSync(framesDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
@@ -42,6 +49,10 @@ export function registerRoutes(app: Express) {
         thumbnailUrl: null,
         duration: null,
       }).returning();
+
+      // Process video frames in the background
+      processVideo(video.id, path.join(uploadsDir, file.filename))
+        .catch(error => console.error('Error processing video:', error));
 
       res.json(video);
     } catch (error) {
