@@ -27,12 +27,20 @@ export default function NavBar() {
                 Dashboard
               </a>
             </Link>
-            <Link href="/uploads">
+            <Link href="/processing">
               <a className={cn(
                 "text-sm transition-colors hover:text-primary",
-                location === "/uploads" ? "text-primary" : "text-gray-500"
+                location === "/processing" ? "text-primary" : "text-gray-500"
               )}>
-                My Uploads
+                Video Processing
+              </a>
+            </Link>
+            <Link href="/analysis">
+              <a className={cn(
+                "text-sm transition-colors hover:text-primary",
+                location === "/analysis" ? "text-primary" : "text-gray-500"
+              )}>
+                Video Analysis
               </a>
             </Link>
           </div>

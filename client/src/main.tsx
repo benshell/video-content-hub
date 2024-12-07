@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 import Dashboard from "./pages/Dashboard";
 import VideoEditor from "./pages/VideoEditor";
+import VideoProcessing from "./pages/VideoProcessing";
 
 import NavBar from "./components/NavBar";
 
@@ -18,7 +19,8 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/video/:id" component={VideoEditor} />
-        <Route path="/uploads" component={Dashboard} />
+        <Route path="/processing" component={VideoProcessing} />
+        <Route path="/analysis" component={Dashboard} />
         <Route>404 Page Not Found</Route>
       </Switch>
     </div>
