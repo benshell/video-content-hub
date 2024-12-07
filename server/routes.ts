@@ -6,7 +6,14 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from "express";
+import cors from "cors";
 import { processVideo } from "./services/videoProcessor";
+
+// Configure express middleware
+const corsOptions = {
+  origin: true,
+  credentials: true,
+};
 
 // Ensure all required directories exist
 const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -49,6 +56,11 @@ const upload = multer({
 });
 
 export function registerRoutes(app: Express) {
+  // Configure middleware
+  app.use(cors(corsOptions));
+  app.use(express.json({ limit: '500mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '500mb' }));
+  
   // Serve static files from uploads directory
   app.use('/uploads', express.static(uploadsDir));
   // Video management

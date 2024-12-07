@@ -10,9 +10,9 @@ interface UploadVideoParams {
 }
 
 export async function uploadVideo({ formData, onProgress }: UploadVideoParams): Promise<Video> {
-  const xhr = new XMLHttpRequest();
-  
   return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable && onProgress) {
         const progress = (event.loaded / event.total) * 100;
@@ -22,13 +22,30 @@ export async function uploadVideo({ formData, onProgress }: UploadVideoParams): 
 
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.response));
+        try {
+          const response = JSON.parse(xhr.response);
+          resolve(response);
+        } catch (error) {
+          reject(new Error('Invalid response format'));
+        }
       } else {
-        reject(new Error('Upload failed'));
+        try {
+          const errorResponse = JSON.parse(xhr.response);
+          reject(new Error(errorResponse.error || 'Upload failed'));
+        } catch (error) {
+          reject(new Error('Upload failed'));
+        }
       }
     });
 
-    xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+    xhr.addEventListener('error', () => {
+      console.error('XHR Error:', xhr.statusText);
+      reject(new Error('Network error occurred during upload'));
+    });
+
+    xhr.addEventListener('abort', () => {
+      reject(new Error('Upload was cancelled'));
+    });
 
     xhr.open('POST', '/api/videos');
     xhr.send(formData);
