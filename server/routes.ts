@@ -8,26 +8,45 @@ import fs from "fs";
 import express from "express";
 import { processVideo } from "./services/videoProcessor";
 
-// Ensure uploads directory exists
+// Ensure all required directories exist
 const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Ensure frames directory exists
+const videosDir = path.join(uploadsDir, 'videos');
 const framesDir = path.join(uploadsDir, 'frames');
-if (!fs.existsSync(framesDir)) {
-  fs.mkdirSync(framesDir, { recursive: true });
-}
+const thumbnailsDir = path.join(uploadsDir, 'thumbnails');
 
-const storage = multer.diskStorage({
-  destination: uploadsDir,
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+[uploadsDir, videosDir, framesDir, thumbnailsDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 });
 
-const upload = multer({ storage });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, videosDir);
+  },
+  filename: (req, file, cb) => {
+    // Sanitize filename and add timestamp to ensure uniqueness
+    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    cb(null, `${Date.now()}_${sanitizedName}`);
+  }
+});
+
+const fileFilter = (req: any, file: any, cb: any) => {
+  const allowedTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only MP4, MOV, WebM, and AVI videos are allowed.'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB max file size
+  }
+});
 
 export function registerRoutes(app: Express) {
   // Serve static files from uploads directory
@@ -42,16 +61,20 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: "No video file uploaded" });
       }
 
-      if (!title) {
+      if (!title?.trim()) {
         return res.status(400).json({ error: "Title is required" });
       }
 
       console.log('Processing video upload:', { title, filename: file.filename });
 
+      // Construct the proper URL paths
+      const videoUrl = `/uploads/videos/${file.filename}`;
+      const videoPath = path.join(videosDir, file.filename);
+
       const [video] = await db.insert(videos).values({
         title: title.trim(),
         description: description?.trim() || '',
-        url: `/uploads/${file.filename}`,
+        url: videoUrl,
         thumbnailUrl: null,
         duration: null,
       }).returning();
@@ -59,16 +82,23 @@ export function registerRoutes(app: Express) {
       console.log('Video record created:', video);
 
       // Process video frames in the background
-      processVideo(video.id, path.join(uploadsDir, file.filename))
+      processVideo(video.id, videoPath)
         .catch(error => {
           console.error('Error processing video:', error);
-          // Don't let processing errors affect the upload response
-          // The video is saved, processing can be retried later if needed
+          // Log the error but don't fail the upload
         });
 
       res.json(video);
     } catch (error) {
       console.error('Error in video upload:', error);
+      // If there's a multer error, it will have a specific format
+      if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: "File is too large. Maximum size is 500MB." });
+        }
+        return res.status(400).json({ error: error.message });
+      }
+      // For other errors, send a generic message
       res.status(500).json({ error: "Failed to upload video. Please try again." });
     }
   });
