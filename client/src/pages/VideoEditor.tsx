@@ -6,8 +6,9 @@ import TaggingInterface from "../components/TaggingInterface";
 import ReviewAgent from "../components/ReviewAgent";
 import { Video, Tag, Keyframe } from "@db/schema";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { useToast } from "@/hooks/use-toast";
 
 interface VideoDetails extends Video {
   tags: Tag[];
@@ -16,6 +17,7 @@ interface VideoDetails extends Video {
 
 export default function VideoEditor() {
   const { id } = useParams();
+  const { toast } = useToast();
   const { data: video, isLoading, error } = useQuery<VideoDetails>({
     queryKey: ["video", id],
     queryFn: () => {
@@ -59,8 +61,49 @@ export default function VideoEditor() {
 
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
-      <div className="border-b p-4 flex-shrink-0">
+      <div className="border-b p-4 flex-shrink-0 flex justify-between items-center">
         <h1 className="text-2xl font-bold">{video.title}</h1>
+        <Button
+          onClick={() => {
+            const exportData = {
+              videoId: video.id,
+              title: video.title,
+              description: video.description,
+              duration: video.duration,
+              tags: video.tags.map(tag => ({
+                name: tag.name,
+                category: tag.category,
+                timestamp: tag.timestamp,
+                confidence: tag.confidence,
+                aiGenerated: tag.aiGenerated
+              })),
+              keyframes: video.keyframes.map(keyframe => ({
+                timestamp: keyframe.timestamp,
+                thumbnailUrl: keyframe.thumbnailUrl,
+                metadata: keyframe.metadata
+              }))
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${video.title.replace(/\s+/g, '_')}_export.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Export Successful",
+              description: "Video data has been exported successfully",
+            });
+          }}
+          className="flex items-center gap-2"
+        >
+          <Download size={20} />
+          Export Data
+        </Button>
       </div>
       
       <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">

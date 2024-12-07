@@ -80,6 +80,14 @@ export async function createKeyframe(keyframe: Omit<Keyframe, 'id'>): Promise<Ke
   }
   return response.json();
 }
+
+export async function exportVideoData(id: number): Promise<any> {
+  const response = await fetch(`/api/videos/${id}/export`);
+  if (!response.ok) {
+    throw new Error('Failed to export video data');
+  }
+  return response.json();
+}
 export async function deleteVideo(id: number): Promise<void> {
   const response = await fetch(`/api/videos/${id}`, {
     method: 'DELETE',

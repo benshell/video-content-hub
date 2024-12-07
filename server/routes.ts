@@ -107,6 +107,54 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch video details" });
     }
   });
+  app.get('/api/videos/:id/export', async (req, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      if (isNaN(videoId)) {
+        return res.status(400).json({ error: "Invalid video ID" });
+      }
+
+      const video = await db.query.videos.findFirst({
+        where: eq(videos.id, videoId),
+        with: {
+          tags: true,
+          keyframes: true,
+        }
+      });
+
+      if (!video) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+
+      const exportData = {
+        videoId: video.id,
+        title: video.title,
+        description: video.description,
+        duration: video.duration,
+        url: video.url,
+        createdAt: video.createdAt,
+        updatedAt: video.updatedAt,
+        tags: video.tags.map(tag => ({
+          name: tag.name,
+          category: tag.category,
+          timestamp: tag.timestamp,
+          confidence: tag.confidence,
+          aiGenerated: tag.aiGenerated
+        })),
+        keyframes: video.keyframes.map(keyframe => ({
+          timestamp: keyframe.timestamp,
+          thumbnailUrl: keyframe.thumbnailUrl,
+          metadata: keyframe.metadata
+        }))
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      console.error('Error exporting video data:', error);
+      res.status(500).json({ error: "Failed to export video data" });
+    }
+  });
+
 
   app.delete('/api/videos/:id', async (req, res) => {
     try {
@@ -127,7 +175,7 @@ export function registerRoutes(app: Express) {
       // Delete the video file
       const videoPath = path.join(process.cwd(), video.url);
       try {
-        await fs.unlink(videoPath);
+        await fs.unlink(videoPath, { force: true });
       } catch (error) {
         console.error('Error deleting video file:', error);
         // Continue with database deletion even if file deletion fails
