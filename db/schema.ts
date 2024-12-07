@@ -1,9 +1,10 @@
 import { pgTable, text, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const videos = pgTable("videos", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   description: text("description"),
   url: text("url").notNull(),
@@ -13,23 +14,42 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const videosRelations = relations(videos, ({ many }) => ({
+  tags: many(tags),
+  keyframes: many(keyframes),
+}));
+
 export const tags = pgTable("tags", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").references(() => videos.id),
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  videoId: integer("video_id").notNull().references(() => videos.id),
   name: text("name").notNull(),
-  category: text("category").notNull().default('general'),
+  category: text("category").notNull(),
   timestamp: integer("timestamp").notNull(),
   confidence: integer("confidence"),
   aiGenerated: integer("ai_generated").default(0),
 });
 
+export const tagsRelations = relations(tags, ({ one }) => ({
+  video: one(videos, {
+    fields: [tags.videoId],
+    references: [videos.id],
+  }),
+}));
+
 export const keyframes = pgTable("keyframes", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").references(() => videos.id),
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  videoId: integer("video_id").notNull().references(() => videos.id),
   timestamp: integer("timestamp").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   metadata: jsonb("metadata")
 });
+
+export const keyframesRelations = relations(keyframes, ({ one }) => ({
+  video: one(videos, {
+    fields: [keyframes.videoId],
+    references: [videos.id],
+  }),
+}));
 
 export const insertVideoSchema = createInsertSchema(videos);
 export const selectVideoSchema = createSelectSchema(videos);

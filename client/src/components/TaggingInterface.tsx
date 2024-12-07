@@ -30,7 +30,7 @@ interface TaggingInterfaceProps {
 export default function TaggingInterface({ video }: TaggingInterfaceProps) {
   const [newTag, setNewTag] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("general");
-  const [categories, setCategories] = useState<string[]>(["general", "score", "foul", "possession"]);
+  const [categories, setCategories] = useState<string[]>(["general", "score", "foul", "possession", "substitution", "card", "corner", "penalty"]);
   const [newCategory, setNewCategory] = useState("");
   const [isManageOpen, setIsManageOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -120,12 +120,15 @@ export default function TaggingInterface({ video }: TaggingInterfaceProps) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Manage Tag Categories</DialogTitle>
+              <DialogTitle>Manage Event Categories</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Add custom event categories for your video analysis. Examples: goal, assist, tackle, etc.
+              </p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="New category..."
+                  placeholder="New category name..."
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
@@ -136,8 +139,21 @@ export default function TaggingInterface({ video }: TaggingInterfaceProps) {
               </div>
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <Badge key={category} variant="secondary">
+                  <Badge 
+                    key={category} 
+                    variant="secondary"
+                    className="flex items-center gap-1 px-3 py-1"
+                  >
                     {category}
+                    {category !== 'general' && (
+                      <X
+                        size={14}
+                        className="cursor-pointer hover:text-red-500 ml-1"
+                        onClick={() => {
+                          setCategories(categories.filter(c => c !== category));
+                        }}
+                      />
+                    )}
                   </Badge>
                 ))}
               </div>

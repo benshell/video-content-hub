@@ -39,6 +39,8 @@ export function registerRoutes(app: Express) {
         title,
         description,
         url: `/uploads/${file.filename}`,
+        thumbnailUrl: null,
+        duration: null,
       }).returning();
 
       res.json(video);
@@ -58,29 +60,26 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/videos/:id', async (req, res) => {
     try {
-      const video = await db.select()
-        .from(videos)
-        .where(eq(videos.id, parseInt(req.params.id)))
-        .limit(1);
+      const videoId = parseInt(req.params.id);
+      if (isNaN(videoId)) {
+        return res.status(400).json({ error: "Invalid video ID" });
+      }
+
+      const video = await db.query.videos.findFirst({
+        where: eq(videos.id, videoId),
+        with: {
+          tags: true,
+          keyframes: true
+        }
+      });
       
-      if (!video.length) {
+      if (!video) {
         return res.status(404).json({ error: "Video not found" });
       }
 
-      const videoTags = await db.select()
-        .from(tags)
-        .where(eq(tags.videoId, video[0].id));
-
-      const videoKeyframes = await db.select()
-        .from(keyframes)
-        .where(eq(keyframes.videoId, video[0].id));
-
-      res.json({
-        ...video[0],
-        tags: videoTags,
-        keyframes: videoKeyframes
-      });
+      res.json(video);
     } catch (error) {
+      console.error('Error fetching video:', error);
       res.status(500).json({ error: "Failed to fetch video details" });
     }
   });
@@ -92,12 +91,12 @@ export function registerRoutes(app: Express) {
       const videoId = parseInt(req.params.id);
 
       const [tag] = await db.insert(tags).values({
-        videoId,
-        name,
-        category,
-        timestamp,
-        confidence,
-        aiGenerated
+        videoId: Number(videoId),
+        name: String(name),
+        category: String(category),
+        timestamp: Number(timestamp),
+        confidence: confidence ? Number(confidence) : null,
+        aiGenerated: aiGenerated ? Number(aiGenerated) : 0
       }).returning();
 
       res.json(tag);
@@ -113,10 +112,10 @@ export function registerRoutes(app: Express) {
       const videoId = parseInt(req.params.id);
 
       const [keyframe] = await db.insert(keyframes).values({
-        videoId,
-        timestamp,
-        thumbnailUrl,
-        metadata
+        videoId: Number(videoId),
+        timestamp: Number(timestamp),
+        thumbnailUrl: thumbnailUrl || null,
+        metadata: metadata || null
       }).returning();
 
       res.json(keyframe);

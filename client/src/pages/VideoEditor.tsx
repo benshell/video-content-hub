@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { fetchVideoDetails } from "../lib/api";
 import TimelineViewer from "../components/TimelineViewer";
 import TaggingInterface from "../components/TaggingInterface";
 import ReviewAgent from "../components/ReviewAgent";
 import { Video, Tag, Keyframe } from "@db/schema";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 interface VideoDetails extends Video {
@@ -14,17 +16,45 @@ interface VideoDetails extends Video {
 
 export default function VideoEditor() {
   const { id } = useParams();
-  const { data: video, isLoading } = useQuery<VideoDetails>({
+  const { data: video, isLoading, error } = useQuery<VideoDetails>({
     queryKey: ["video", id],
-    queryFn: () => fetchVideoDetails(parseInt(id || "0"))
+    queryFn: () => {
+      if (!id || isNaN(parseInt(id))) {
+        throw new Error("Invalid video ID");
+      }
+      return fetchVideoDetails(parseInt(id));
+    },
+    retry: false
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-gray-500">Loading video...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!video) {
-    return <div>Video not found</div>;
+  if (error || !video) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <X size={48} className="mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Video Not Found</h2>
+          <p className="text-gray-500 mb-4">
+            The video you're looking for could not be found or may have been removed.
+          </p>
+          <Button asChild>
+            <Link href="/">Return to Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
