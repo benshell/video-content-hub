@@ -108,6 +108,40 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.delete('/api/videos/:id', async (req, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      if (isNaN(videoId)) {
+        return res.status(400).json({ error: "Invalid video ID" });
+      }
+
+      // First, fetch the video to get its file path
+      const video = await db.query.videos.findFirst({
+        where: eq(videos.id, videoId)
+      });
+
+      if (!video) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+
+      // Delete the video file
+      const videoPath = path.join(process.cwd(), video.url);
+      try {
+        await fs.unlink(videoPath);
+      } catch (error) {
+        console.error('Error deleting video file:', error);
+        // Continue with database deletion even if file deletion fails
+      }
+
+      // Delete related records (tags and keyframes will be cascade deleted)
+      await db.delete(videos).where(eq(videos.id, videoId));
+
+      res.json({ message: "Video deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      res.status(500).json({ error: "Failed to delete video" });
+    }
+  });
   // Tag management
   app.post('/api/videos/:id/tags', async (req, res) => {
     try {

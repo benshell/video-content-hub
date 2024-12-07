@@ -80,3 +80,12 @@ export async function createKeyframe(keyframe: Omit<Keyframe, 'id'>): Promise<Ke
   }
   return response.json();
 }
+export async function deleteVideo(id: number): Promise<void> {
+  const response = await fetch(`/api/videos/${id}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to delete video');
+  }
+}
