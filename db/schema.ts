@@ -10,6 +10,9 @@ export const videos = pgTable("videos", {
   url: text("url").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   duration: integer("duration"),
+  processingStatus: text("processing_status").default("pending"),
+  processedFrames: integer("processed_frames").default(0),
+  totalFrames: integer("total_frames").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

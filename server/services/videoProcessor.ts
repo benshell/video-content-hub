@@ -25,6 +25,11 @@ export async function processVideo(videoId: number, videoPath: string) {
   const framesDir = path.join(process.cwd(), 'uploads', 'frames', videoId.toString());
   
   try {
+    // Update video status to processing
+    await db.update(videos)
+      .set({ processingStatus: 'processing' })
+      .where(eq(videos.id, videoId));
+
     // Ensure the frames directory exists and is empty
     await fs.rm(framesDir, { recursive: true, force: true }).catch(() => {});
     await fs.mkdir(framesDir, { recursive: true });
@@ -50,6 +55,11 @@ export async function processVideo(videoId: number, videoPath: string) {
     const frames = await extractFrames(videoPath, framesDir);
     console.log(`Successfully extracted ${frames.length} frames from video`);
     
+    // Update total frames count
+    await db.update(videos)
+      .set({ totalFrames: frames.length })
+      .where(eq(videos.id, videoId));
+
     // Process frames in smaller batches to avoid memory issues
     const BATCH_SIZE = 3; // Reduced batch size for more reliable processing
     let processedFrames = 0;
@@ -102,6 +112,11 @@ export async function processVideo(videoId: number, videoPath: string) {
 
           console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
           processedFrames++;
+          
+          // Update progress in database
+          await db.update(videos)
+            .set({ processedFrames })
+            .where(eq(videos.id, videoId));
 
         } catch (error) {
           console.error(`Error processing frame at ${frame.timestamp}:`, error);
@@ -193,7 +208,7 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
   try {
     console.log("Starting frame analysis with GPT-4 Vision...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-vision-0125",
       messages: [
         {
           role: "user",

@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Video } from "@db/schema";
+import type { Video, Tag } from "@db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Play, FileVideo, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { fetchVideos } from "../lib/api";
@@ -14,42 +15,53 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+interface FrameMetadata {
+  semanticDescription: {
+    summary: string;
+    keyElements: string[];
+    mood: string;
+    composition: string;
+  };
+  objects: {
+    people: string[];
+    items: string[];
+    environment: string[];
+  };
+  actions: {
+    primary: string;
+    secondary: string[];
+    movements: string[];
+  };
+  technical: {
+    lighting: string;
+    cameraAngle: string;
+    visualQuality: string;
+  };
+}
+
+interface ProcessedKeyframe {
+  id: number;
+  timestamp: number;
+  thumbnailUrl?: string;
+  metadata?: FrameMetadata;
+}
+
 interface VideoWithKeyframes extends Video {
-  keyframes?: Array<{
-    id: number;
-    timestamp: number;
-    thumbnailUrl?: string;
-    metadata?: {
-      semanticDescription: {
-        summary: string;
-        keyElements: string[];
-        mood: string;
-        composition: string;
-      };
-      objects: {
-        people: string[];
-        items: string[];
-        environment: string[];
-      };
-      actions: {
-        primary: string;
-        secondary: string[];
-        movements: string[];
-      };
-      technical: {
-        lighting: string;
-        cameraAngle: string;
-        visualQuality: string;
-      };
-    };
-  }>;
+  keyframes: ProcessedKeyframe[];
   tags: Tag[];
 }
 
+type VideoProcessingStatus = {
+  data?: VideoWithKeyframes[];
+  isLoading: boolean;
+  error: unknown;
+};
+
 export default function VideoProcessing() {
-  const { data: videos, isLoading } = useQuery<VideoWithKeyframes[]>({
+  const { data: videos, isLoading } = useQuery<VideoWithKeyframes[], Error>({
     queryKey: ["videos"],
-    queryFn: fetchVideos
+    queryFn: fetchVideos,
+    refetchInterval: 5000 // Refetch every 5 seconds to update processing status
   });
 
   if (isLoading) {
@@ -131,7 +143,7 @@ export default function VideoProcessing() {
                                       <div className="mt-2">
                                         <p className="font-medium text-gray-600">Key Elements</p>
                                         <div className="flex flex-wrap gap-1 mt-1">
-                                          {keyframe.metadata.semanticDescription.keyElements.map((element, i) => (
+                                          {keyframe.metadata.semanticDescription.keyElements.map((element: string, i: number) => (
                                             <Badge key={i} variant="outline">{element}</Badge>
                                           ))}
                                         </div>
@@ -156,7 +168,7 @@ export default function VideoProcessing() {
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">People</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.people.map((person, i) => (
+                                            {keyframe.metadata.objects.people.map((person: string, i: number) => (
                                               <Badge key={i} variant="secondary">{person}</Badge>
                                             ))}
                                           </div>
@@ -166,7 +178,7 @@ export default function VideoProcessing() {
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Items</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.items.map((item, i) => (
+                                            {keyframe.metadata.objects.items.map((item: string, i: number) => (
                                               <Badge key={i} variant="secondary">{item}</Badge>
                                             ))}
                                           </div>
@@ -176,7 +188,7 @@ export default function VideoProcessing() {
                                         <div>
                                           <p className="font-medium text-gray-600">Environment</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.environment.map((env, i) => (
+                                            {keyframe.metadata.objects.environment.map((env: string, i: number) => (
                                               <Badge key={i} variant="secondary">{env}</Badge>
                                             ))}
                                           </div>
@@ -194,7 +206,7 @@ export default function VideoProcessing() {
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Secondary Actions</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.secondary.map((action, i) => (
+                                            {keyframe.metadata.actions.secondary.map((action: string, i: number) => (
                                               <Badge key={i}>{action}</Badge>
                                             ))}
                                           </div>
@@ -204,7 +216,7 @@ export default function VideoProcessing() {
                                         <div>
                                           <p className="font-medium text-gray-600">Movements</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.movements.map((movement, i) => (
+                                            {keyframe.metadata.actions.movements.map((movement: string, i: number) => (
                                               <Badge key={i}>{movement}</Badge>
                                             ))}
                                           </div>
@@ -237,9 +249,29 @@ export default function VideoProcessing() {
                         </div>
                       ))}
                       {(!video.keyframes || video.keyframes.length === 0) && (
-                        <div className="flex items-center gap-2 text-gray-500">
-                          <AlertCircle size={20} />
-                          <p>Frame summaries will be generated when processing is complete.</p>
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <AlertCircle size={20} />
+                            <p>
+                              {video.processingStatus === 'processing' 
+                                ? 'Processing video frames...' 
+                                : 'Frame summaries will be generated when processing starts.'}
+                            </p>
+                          </div>
+                          {video.processingStatus === 'processing' && video.totalFrames > 0 && (
+                            <div className="space-y-2">
+                              <Progress 
+                                value={(video.processedFrames / video.totalFrames) * 100}
+                                className="w-full"
+                              />
+                              <p className="text-sm text-gray-500 text-center">
+                                Processed {video.processedFrames} of {video.totalFrames} frames
+                              </p>
+                              <p className="text-xs text-gray-400 text-center">
+                                This process may take several minutes depending on the video length
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
