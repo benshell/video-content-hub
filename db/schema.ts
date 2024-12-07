@@ -4,7 +4,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const videos = pgTable("videos", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   title: text("title").notNull(),
   description: text("description"),
   url: text("url").notNull(),
@@ -20,7 +20,7 @@ export const videosRelations = relations(videos, ({ many }) => ({
 }));
 
 export const tags = pgTable("tags", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   videoId: integer("video_id").notNull().references(() => videos.id),
   name: text("name").notNull(),
   category: text("category").notNull(),
@@ -37,7 +37,7 @@ export const tagsRelations = relations(tags, ({ one }) => ({
 }));
 
 export const keyframes = pgTable("keyframes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   videoId: integer("video_id").notNull().references(() => videos.id),
   timestamp: integer("timestamp").notNull(),
   thumbnailUrl: text("thumbnail_url"),
