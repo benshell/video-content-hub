@@ -31,6 +31,10 @@ export function registerRoutes(app: Express) {
       const file = req.file;
       const { title, description } = req.body;
       
+      if (!file) {
+        return res.status(400).json({ error: "No video file uploaded" });
+      }
+
       const [video] = await db.insert(videos).values({
         title,
         description,
