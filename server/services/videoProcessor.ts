@@ -23,9 +23,12 @@ interface ExtractedFrame {
 
 export async function processVideo(videoId: number, videoPath: string) {
   const framesDir = path.join(process.cwd(), 'uploads', 'frames', videoId.toString());
-  await fs.mkdir(framesDir, { recursive: true });
-
+  
   try {
+    // Ensure the frames directory exists and is empty
+    await fs.rm(framesDir, { recursive: true, force: true }).catch(() => {});
+    await fs.mkdir(framesDir, { recursive: true });
+    
     console.log(`Starting video processing for videoId: ${videoId}`);
     
     // Get video duration and update video record
@@ -130,7 +133,6 @@ export async function processVideo(videoId: number, videoPath: string) {
 async function extractFrames(videoPath: string, outputDir: string): Promise<ExtractedFrame[]> {
   return new Promise((resolve, reject) => {
     const frames: ExtractedFrame[] = [];
-    let framesCompleted = false;
     
     ffmpeg(videoPath)
       .outputOptions([
@@ -139,26 +141,36 @@ async function extractFrames(videoPath: string, outputDir: string): Promise<Extr
         '-qscale:v', '2' // High quality frames
       ])
       .output(path.join(outputDir, 'frame-%d.jpg'))
-      .on('end', () => {
-        console.log(`Completed frame extraction, found ${frames.length} frames`);
-        framesCompleted = true;
-        // Only resolve after both extraction is complete and all frames are processed
-        resolve(frames);
+      .on('end', async () => {
+        try {
+          // Verify and collect all extracted frames
+          const files = await fs.readdir(outputDir);
+          const frameFiles = files.filter(f => f.startsWith('frame-') && f.endsWith('.jpg'));
+          
+          for (const file of frameFiles.sort()) {
+            const frameNumber = parseInt(file.replace('frame-', '').replace('.jpg', ''));
+            if (!isNaN(frameNumber)) {
+              const framePath = path.join(outputDir, file);
+              // Verify file exists and is accessible
+              await fs.access(framePath);
+              frames.push({
+                timestamp: frameNumber,
+                path: framePath
+              });
+              console.log(`Verified frame ${frameNumber} at ${framePath}`);
+            }
+          }
+          
+          console.log(`Successfully verified ${frames.length} frames`);
+          resolve(frames.sort((a, b) => a.timestamp - b.timestamp));
+        } catch (error) {
+          console.error('Error verifying frames:', error);
+          reject(error);
+        }
       })
       .on('error', (err) => {
-        console.error('Error extracting frames:', err);
+        console.error('Error in ffmpeg frame extraction:', err);
         reject(err);
-      })
-      .on('progress', (progress) => {
-        if (progress.frames) {
-          const frameNumber = progress.frames;
-          const framePath = path.join(outputDir, `frame-${frameNumber}.jpg`);
-          frames.push({
-            timestamp: frameNumber,
-            path: framePath
-          });
-          console.log(`Extracted frame ${frameNumber} to ${framePath}`);
-        }
       })
       .run();
   });
@@ -181,7 +193,7 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
   try {
     console.log("Starting frame analysis with GPT-4 Vision...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-0125-preview",
       messages: [
         {
           role: "user",
