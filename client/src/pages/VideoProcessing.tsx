@@ -76,8 +76,8 @@ export default function VideoProcessing() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
+    <div className="container mx-auto p-6 h-screen overflow-y-auto">
+      <div className="mb-8 sticky top-0 bg-background z-10 pb-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
           Video Processing
         </h1>
