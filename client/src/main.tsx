@@ -9,13 +9,19 @@ import { Toaster } from "@/components/ui/toaster";
 import Dashboard from "./pages/Dashboard";
 import VideoEditor from "./pages/VideoEditor";
 
+import NavBar from "./components/NavBar";
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/video/:id" component={VideoEditor} />
-      <Route>404 Page Not Found</Route>
-    </Switch>
+    <div className="min-h-screen bg-background">
+      <NavBar />
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/video/:id" component={VideoEditor} />
+        <Route path="/uploads" component={Dashboard} />
+        <Route>404 Page Not Found</Route>
+      </Switch>
+    </div>
   );
 }
 
