@@ -55,7 +55,7 @@ export default function TaggingInterface({ video }: TaggingInterfaceProps) {
   }, {} as Record<number, Tag[]>);
 
   return (
-    <div className="flex-1 border-b p-4">
+    <div className="flex-1 border-b p-4 overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
         <Input
           placeholder="Add new tag..."

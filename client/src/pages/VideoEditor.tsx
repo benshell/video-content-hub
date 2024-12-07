@@ -28,20 +28,22 @@ export default function VideoEditor() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="border-b p-4">
+    <div className="min-h-screen flex flex-col overflow-hidden">
+      <div className="border-b p-4 flex-shrink-0">
         <h1 className="text-2xl font-bold">{video.title}</h1>
       </div>
       
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">
         <ResizablePanel defaultSize={70}>
-          <div className="h-full flex flex-col">
-            <div className="flex-1 p-4">
-              <video
-                src={video.url}
-                controls
-                className="w-full h-full object-contain bg-black"
-              />
+          <div className="h-full flex flex-col overflow-hidden">
+            <div className="flex-1 p-4 overflow-hidden">
+              <div className="relative w-full h-full">
+                <video
+                  src={video.url}
+                  controls
+                  className="absolute inset-0 w-full h-full object-contain bg-black"
+                />
+              </div>
             </div>
             <TimelineViewer video={video} />
           </div>
