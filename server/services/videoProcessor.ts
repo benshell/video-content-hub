@@ -200,20 +200,45 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
           content: [
             { 
               type: "text", 
-              text: `Analyze this video frame and provide detailed analysis in the following JSON format:
+              text: `Analyze this video frame and provide a detailed analysis in the following JSON format:
 {
   "tags": [
     {"name": "string", "category": "person|object|action|scene", "confidence": number}
   ],
-  "description": "detailed scene description",
-  "objects": ["list of visible objects"],
-  "actions": ["list of actions being performed"]
+  "semanticDescription": {
+    "summary": "A concise but detailed description of the scene",
+    "keyElements": ["Important visual elements"],
+    "mood": "Overall mood or atmosphere",
+    "composition": "Description of visual composition and framing"
+  },
+  "objects": {
+    "people": ["Detailed descriptions of people"],
+    "items": ["Notable objects or props"],
+    "environment": ["Background and setting elements"]
+  },
+  "actions": {
+    "primary": "Main action occurring",
+    "secondary": ["Other notable activities"],
+    "movements": ["Specific movements or gestures"]
+  },
+  "technical": {
+    "lighting": "Description of lighting conditions",
+    "cameraAngle": "Camera perspective",
+    "visualQuality": "Image quality and clarity"
+  }
 }
-Be specific and detailed in your analysis. Include all visible elements.`
+Provide rich, contextual analysis that captures both technical and semantic aspects. Be specific and detailed.`
             },
             {
-              type: "image",
-              image_url: `data:image/jpeg;base64,${base64Image}`
+              type: "text", 
+              text: "Focus on providing contextual understanding and semantic relationships between elements. Describe the significance of what's happening, not just what's visible."
+            },
+            {
+              type: "image", 
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+                detail: "high"
+              }
             }
           ]
         }
@@ -245,9 +270,29 @@ Be specific and detailed in your analysis. Include all visible elements.`
     const result = {
       tags: transformedTags,
       metadata: {
-        description: String(analysis.description || ""),
-        objects: Array.isArray(analysis.objects) ? analysis.objects.map(String) : [],
-        actions: Array.isArray(analysis.actions) ? analysis.actions.map(String) : [],
+        semanticDescription: {
+          summary: String(analysis.semanticDescription?.summary || ""),
+          keyElements: Array.isArray(analysis.semanticDescription?.keyElements) 
+            ? analysis.semanticDescription.keyElements.map(String) 
+            : [],
+          mood: String(analysis.semanticDescription?.mood || ""),
+          composition: String(analysis.semanticDescription?.composition || "")
+        },
+        objects: {
+          people: Array.isArray(analysis.objects?.people) ? analysis.objects.people.map(String) : [],
+          items: Array.isArray(analysis.objects?.items) ? analysis.objects.items.map(String) : [],
+          environment: Array.isArray(analysis.objects?.environment) ? analysis.objects.environment.map(String) : []
+        },
+        actions: {
+          primary: String(analysis.actions?.primary || ""),
+          secondary: Array.isArray(analysis.actions?.secondary) ? analysis.actions.secondary.map(String) : [],
+          movements: Array.isArray(analysis.actions?.movements) ? analysis.actions.movements.map(String) : []
+        },
+        technical: {
+          lighting: String(analysis.technical?.lighting || ""),
+          cameraAngle: String(analysis.technical?.cameraAngle || ""),
+          visualQuality: String(analysis.technical?.visualQuality || "")
+        }
       },
     };
 

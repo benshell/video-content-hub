@@ -104,33 +104,113 @@ export default function VideoProcessing() {
                                 Timestamp: {new Date(keyframe.timestamp * 1000).toISOString().substr(11, 8)}
                               </p>
                               {keyframe.metadata && (
-                                <div className="text-sm text-gray-500">
-                                  <p className="font-medium">Description:</p>
-                                  <p>{keyframe.metadata.description}</p>
-                                  {keyframe.metadata.objects?.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="font-medium">Objects:</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {keyframe.metadata.objects.map((obj, i) => (
-                                          <Badge key={i} variant="secondary">
-                                            {obj}
-                                          </Badge>
-                                        ))}
+                                <div className="text-sm space-y-4">
+                                  <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="font-semibold text-base mb-2">Semantic Analysis</h4>
+                                    <p className="text-gray-700">{keyframe.metadata.semanticDescription?.summary}</p>
+                                    {keyframe.metadata.semanticDescription?.keyElements?.length > 0 && (
+                                      <div className="mt-2">
+                                        <p className="font-medium text-gray-600">Key Elements</p>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {keyframe.metadata.semanticDescription.keyElements.map((element, i) => (
+                                            <Badge key={i} variant="outline">{element}</Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <div className="grid grid-cols-2 gap-4 mt-3">
+                                      <div>
+                                        <p className="font-medium text-gray-600">Mood</p>
+                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription?.mood}</p>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-gray-600">Composition</p>
+                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription?.composition}</p>
                                       </div>
                                     </div>
-                                  )}
-                                  {keyframe.metadata.actions?.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="font-medium">Actions:</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {keyframe.metadata.actions.map((action, i) => (
-                                          <Badge key={i} variant="secondary">
-                                            {action}
-                                          </Badge>
-                                        ))}
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                      <h4 className="font-semibold text-base mb-2">Objects</h4>
+                                      {keyframe.metadata.objects?.people?.length > 0 && (
+                                        <div className="mb-3">
+                                          <p className="font-medium text-gray-600">People</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {keyframe.metadata.objects.people.map((person, i) => (
+                                              <Badge key={i} variant="secondary">{person}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {keyframe.metadata.objects?.items?.length > 0 && (
+                                        <div className="mb-3">
+                                          <p className="font-medium text-gray-600">Items</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {keyframe.metadata.objects.items.map((item, i) => (
+                                              <Badge key={i} variant="secondary">{item}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {keyframe.metadata.objects?.environment?.length > 0 && (
+                                        <div>
+                                          <p className="font-medium text-gray-600">Environment</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {keyframe.metadata.objects.environment.map((env, i) => (
+                                              <Badge key={i} variant="secondary">{env}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                      <h4 className="font-semibold text-base mb-2">Actions</h4>
+                                      <div className="mb-3">
+                                        <p className="font-medium text-gray-600">Primary Action</p>
+                                        <p className="text-gray-700">{keyframe.metadata.actions?.primary}</p>
+                                      </div>
+                                      {keyframe.metadata.actions?.secondary?.length > 0 && (
+                                        <div className="mb-3">
+                                          <p className="font-medium text-gray-600">Secondary Actions</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {keyframe.metadata.actions.secondary.map((action, i) => (
+                                              <Badge key={i}>{action}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {keyframe.metadata.actions?.movements?.length > 0 && (
+                                        <div>
+                                          <p className="font-medium text-gray-600">Movements</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {keyframe.metadata.actions.movements.map((movement, i) => (
+                                              <Badge key={i}>{movement}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="font-semibold text-base mb-2">Technical Details</h4>
+                                    <div className="grid grid-cols-3 gap-4">
+                                      <div>
+                                        <p className="font-medium text-gray-600">Lighting</p>
+                                        <p className="text-gray-700">{keyframe.metadata.technical?.lighting}</p>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-gray-600">Camera Angle</p>
+                                        <p className="text-gray-700">{keyframe.metadata.technical?.cameraAngle}</p>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-gray-600">Visual Quality</p>
+                                        <p className="text-gray-700">{keyframe.metadata.technical?.visualQuality}</p>
                                       </div>
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
                               )}
                             </div>
