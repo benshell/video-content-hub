@@ -36,20 +36,30 @@ export async function processVideo(videoId: number, videoPath: string) {
       });
     });
 
+    console.log(`Video duration: ${duration} seconds`);
+
     await db.update(videos)
       .set({ duration })
       .where(eq(videos.id, videoId));
 
     // Extract frames every second
+    console.log("Starting frame extraction...");
     const frames = await extractFrames(videoPath, framesDir);
-    console.log(`Extracted ${frames.length} frames from video`);
+    console.log(`Successfully extracted ${frames.length} frames from video`);
     
     // Process frames in smaller batches to avoid memory issues
-    const BATCH_SIZE = 5;
+    const BATCH_SIZE = 3; // Reduced batch size for more reliable processing
+    let processedFrames = 0;
+    let totalTags = 0;
+
     for (let i = 0; i < frames.length; i += BATCH_SIZE) {
       const batch = frames.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(frames.length/BATCH_SIZE)}`);
+
       await Promise.all(batch.map(async (frame) => {
         try {
+          console.log(`Processing frame at timestamp: ${frame.timestamp}`);
+          
           // Compress and convert frame to base64
           const buffer = await sharp(frame.path)
             .resize(800, null, { fit: 'inside' })
@@ -57,21 +67,23 @@ export async function processVideo(videoId: number, videoPath: string) {
             .toBuffer();
           
           const base64Image = buffer.toString('base64');
-          console.log(`Processing frame at timestamp: ${frame.timestamp}`);
           
           // Analyze frame using GPT-4 Vision
           const analysis = await analyzeFrame(base64Image);
           
-          // Save keyframe
+          // Save keyframe with relative path
+          const relativePath = frame.path.replace(process.cwd(), '');
           const [keyframe] = await db.insert(keyframes).values({
             videoId,
             timestamp: frame.timestamp,
-            thumbnailUrl: frame.path.replace(process.cwd(), ''),
+            thumbnailUrl: relativePath,
             metadata: analysis.metadata
           }).returning();
 
+          console.log(`Saved keyframe at ${frame.timestamp} with metadata:`, analysis.metadata);
+
           // Create tags from analysis
-          await Promise.all(analysis.tags.map(tag =>
+          const tagPromises = analysis.tags.map(tag =>
             db.insert(tags).values({
               videoId,
               name: tag.name,
@@ -80,23 +92,35 @@ export async function processVideo(videoId: number, videoPath: string) {
               confidence: tag.confidence,
               aiGenerated: 1
             })
-          ));
+          );
 
-          console.log(`Successfully processed frame at ${frame.timestamp} with ${analysis.tags.length} tags`);
+          const insertedTags = await Promise.all(tagPromises);
+          totalTags += insertedTags.length;
+
+          console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
+          processedFrames++;
+
         } catch (error) {
           console.error(`Error processing frame at ${frame.timestamp}:`, error);
-        } finally {
-          // Clean up the frame file regardless of success/failure
-          try {
-            await fs.unlink(frame.path);
-          } catch (unlinkError) {
-            console.error(`Error cleaning up frame file ${frame.path}:`, unlinkError);
-          }
+          throw error; // Propagate error to retry mechanism
         }
       }));
+
+      // Log progress after each batch
+      console.log(`Progress: ${processedFrames}/${frames.length} frames processed, ${totalTags} tags created`);
     }
     
     console.log(`Completed video processing for videoId: ${videoId}`);
+    console.log(`Final statistics: ${processedFrames} frames processed, ${totalTags} tags created`);
+
+    // Clean up frames directory
+    try {
+      await fs.rm(framesDir, { recursive: true, force: true });
+      console.log(`Cleaned up frames directory: ${framesDir}`);
+    } catch (error) {
+      console.error(`Error cleaning up frames directory: ${framesDir}`, error);
+    }
+
   } catch (error) {
     console.error('Error processing video:', error);
     throw error;
@@ -106,14 +130,21 @@ export async function processVideo(videoId: number, videoPath: string) {
 async function extractFrames(videoPath: string, outputDir: string): Promise<ExtractedFrame[]> {
   return new Promise((resolve, reject) => {
     const frames: ExtractedFrame[] = [];
+    let framesCompleted = false;
     
     ffmpeg(videoPath)
       .outputOptions([
         '-vf', 'fps=1', // Extract 1 frame per second
-        '-frame_pts', '1'
+        '-frame_pts', '1',
+        '-qscale:v', '2' // High quality frames
       ])
       .output(path.join(outputDir, 'frame-%d.jpg'))
-      .on('end', () => resolve(frames))
+      .on('end', () => {
+        console.log(`Completed frame extraction, found ${frames.length} frames`);
+        framesCompleted = true;
+        // Only resolve after both extraction is complete and all frames are processed
+        resolve(frames);
+      })
       .on('error', (err) => {
         console.error('Error extracting frames:', err);
         reject(err);
@@ -121,10 +152,12 @@ async function extractFrames(videoPath: string, outputDir: string): Promise<Extr
       .on('progress', (progress) => {
         if (progress.frames) {
           const frameNumber = progress.frames;
+          const framePath = path.join(outputDir, `frame-${frameNumber}.jpg`);
           frames.push({
             timestamp: frameNumber,
-            path: path.join(outputDir, `frame-${frameNumber}.jpg`)
+            path: framePath
           });
+          console.log(`Extracted frame ${frameNumber} to ${framePath}`);
         }
       })
       .run();
@@ -146,25 +179,39 @@ interface AnalyzedFrame {
 
 async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
   try {
+    console.log("Starting frame analysis with GPT-4 Vision...");
     const response = await openai.chat.completions.create({
       model: "gpt-4-vision-preview",
       messages: [
         {
           role: "user",
           content: [
-            { type: "text", text: "Analyze this video frame and provide:\n1. A list of tags with categories (person, object, action, scene)\n2. A brief description\n3. Key objects present\n4. Actions being performed\nFormat the response in JSON." },
+            { 
+              type: "text", 
+              text: `Analyze this video frame and provide detailed analysis in the following JSON format:
+{
+  "tags": [
+    {"name": "string", "category": "person|object|action|scene", "confidence": number}
+  ],
+  "description": "detailed scene description",
+  "objects": ["list of visible objects"],
+  "actions": ["list of actions being performed"]
+}
+Be specific and detailed in your analysis. Include all visible elements.`
+            },
             {
               type: "image_url",
               image_url: {
                 url: `data:image/jpeg;base64,${base64Image}`,
-                detail: "low"
+                detail: "high"
               }
             }
           ]
         }
       ],
-      max_tokens: 500,
-      temperature: 0.7
+      max_tokens: 1000,
+      temperature: 0.5,
+      response_format: { type: "json_object" }
     });
 
     if (!response.choices[0]?.message?.content) {
@@ -172,33 +219,34 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
       throw new Error("No analysis received");
     }
 
-    try {
-      const analysis = JSON.parse(response.choices[0].message.content);
+    console.log("Received GPT-4 Vision response:", response.choices[0].message.content);
+
+    const analysis = JSON.parse(response.choices[0].message.content);
+    
+    // Validate and transform the analysis
+    const transformedTags = (analysis.tags || []).map((tag: any) => {
+      const validCategories = ['person', 'object', 'action', 'scene'];
       return {
-        tags: (analysis.tags || []).map((tag: any) => ({
-          name: String(tag.name || ""),
-          category: String(tag.category || "object"),
-          confidence: Number(tag.confidence) || 90,
-        })),
-        metadata: {
-          description: String(analysis.description || ""),
-          objects: Array.isArray(analysis.objects) ? analysis.objects.map(String) : [],
-          actions: Array.isArray(analysis.actions) ? analysis.actions.map(String) : [],
-        },
+        name: String(tag.name || "").toLowerCase(),
+        category: validCategories.includes(String(tag.category)) ? String(tag.category) : 'object',
+        confidence: Math.min(Math.max(Number(tag.confidence) || 90, 0), 100), // Ensure confidence is between 0-100
       };
-    } catch (parseError) {
-      console.error("Error parsing OpenAI response:", parseError);
-      throw new Error("Invalid response format");
-    }
-  } catch (error) {
-    console.error("Error in frame analysis:", error);
-    return {
-      tags: [],
+    });
+
+    const result = {
+      tags: transformedTags,
       metadata: {
-        description: "",
-        objects: [],
-        actions: [],
+        description: String(analysis.description || ""),
+        objects: Array.isArray(analysis.objects) ? analysis.objects.map(String) : [],
+        actions: Array.isArray(analysis.actions) ? analysis.actions.map(String) : [],
       },
     };
+
+    console.log("Processed analysis result:", result);
+    return result;
+
+  } catch (error) {
+    console.error("Error in frame analysis:", error);
+    throw error; // Let the caller handle the error
   }
 }
