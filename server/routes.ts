@@ -172,17 +172,12 @@ export function registerRoutes(app: Express) {
         return res.status(404).json({ error: "Video not found" });
       }
 
-      // Delete the video file
-      const videoPath = path.join(process.cwd(), video.url);
-      try {
-        await fs.unlink(videoPath, { force: true });
-      } catch (error) {
-        console.error('Error deleting video file:', error);
-        // Continue with database deletion even if file deletion fails
-      }
-
       // Delete related records (tags and keyframes will be cascade deleted)
       await db.delete(videos).where(eq(videos.id, videoId));
+
+      // Clean up all unused files
+      const { cleanupUnusedVideos } = await import('./utils/cleanup');
+      await cleanupUnusedVideos();
 
       res.json({ message: "Video deleted successfully" });
     } catch (error) {
