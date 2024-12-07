@@ -25,6 +25,8 @@ export async function processVideo(videoId: number, videoPath: string) {
   const framesDir = path.join(process.cwd(), 'uploads', 'frames', videoId.toString());
   
   try {
+    console.log(`Starting video processing for videoId: ${videoId}`);
+    
     // Update video status to processing
     await db.update(videos)
       .set({ processingStatus: 'processing' })
@@ -51,9 +53,24 @@ export async function processVideo(videoId: number, videoPath: string) {
       .where(eq(videos.id, videoId));
 
     // Extract frames every second
-    console.log("Starting frame extraction...");
-    const frames = await extractFrames(videoPath, framesDir);
-    console.log(`Successfully extracted ${frames.length} frames from video`);
+    console.log("Starting frame extraction for video:", videoPath);
+    console.log("Frames will be saved to:", framesDir);
+    
+    let frames;
+    try {
+      frames = await extractFrames(videoPath, framesDir);
+      console.log(`Successfully extracted ${frames.length} frames from video`);
+    } catch (error: unknown) {
+      const errorDetails = {
+        ffmpegPath: ffmpegPath.path,
+        videoPath,
+        framesDir,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      };
+      console.error("Failed to extract frames:", errorDetails);
+      throw new Error(`Frame extraction failed: ${errorDetails.message}`);
+    }
     
     // Update total frames count
     await db.update(videos)
@@ -149,42 +166,68 @@ async function extractFrames(videoPath: string, outputDir: string): Promise<Extr
   return new Promise((resolve, reject) => {
     const frames: ExtractedFrame[] = [];
     
+    console.log(`Starting frame extraction from: ${videoPath}`);
+    console.log(`Output directory: ${outputDir}`);
+    
     ffmpeg(videoPath)
       .outputOptions([
         '-vf', 'fps=1', // Extract 1 frame per second
         '-frame_pts', '1',
-        '-qscale:v', '2' // High quality frames
+        '-qscale:v', '2', // High quality frames
+        '-frames:v', '300' // Limit to 300 frames (5 minutes) for processing
       ])
+      .on('start', (command) => {
+        console.log('FFmpeg started with command:', command);
+      })
+      .on('progress', (progress) => {
+        console.log('FFmpeg Progress:', progress);
+      })
       .output(path.join(outputDir, 'frame-%d.jpg'))
       .on('end', async () => {
         try {
-          // Verify and collect all extracted frames
+          console.log('Frame extraction completed, verifying frames...');
           const files = await fs.readdir(outputDir);
           const frameFiles = files.filter(f => f.startsWith('frame-') && f.endsWith('.jpg'));
+          
+          console.log(`Found ${frameFiles.length} potential frame files`);
           
           for (const file of frameFiles.sort()) {
             const frameNumber = parseInt(file.replace('frame-', '').replace('.jpg', ''));
             if (!isNaN(frameNumber)) {
               const framePath = path.join(outputDir, file);
-              // Verify file exists and is accessible
-              await fs.access(framePath);
-              frames.push({
-                timestamp: frameNumber,
-                path: framePath
-              });
-              console.log(`Verified frame ${frameNumber} at ${framePath}`);
+              try {
+                // Verify file exists and is accessible
+                await fs.access(framePath);
+                // Get file stats to verify it's a valid file
+                const stats = await fs.stat(framePath);
+                if (stats.size > 0) {
+                  frames.push({
+                    timestamp: frameNumber,
+                    path: framePath
+                  });
+                  console.log(`Verified frame ${frameNumber} at ${framePath} (${stats.size} bytes)`);
+                } else {
+                  console.warn(`Skipping empty frame file: ${framePath}`);
+                }
+              } catch (error) {
+                console.warn(`Failed to verify frame ${frameNumber}:`, error);
+              }
             }
           }
           
-          console.log(`Successfully verified ${frames.length} frames`);
-          resolve(frames.sort((a, b) => a.timestamp - b.timestamp));
+          if (frames.length === 0) {
+            reject(new Error('No valid frames were extracted from the video'));
+          } else {
+            console.log(`Successfully verified ${frames.length} frames`);
+            resolve(frames.sort((a, b) => a.timestamp - b.timestamp));
+          }
         } catch (error) {
           console.error('Error verifying frames:', error);
           reject(error);
         }
       })
       .on('error', (err) => {
-        console.error('Error in ffmpeg frame extraction:', err);
+        console.error('Error in FFmpeg frame extraction:', err);
         reject(err);
       })
       .run();
@@ -198,9 +241,27 @@ interface AnalyzedFrame {
     confidence: number;
   }>;
   metadata: {
-    description: string;
-    objects: string[];
-    actions: string[];
+    semanticDescription: {
+      summary: string;
+      keyElements: string[];
+      mood: string;
+      composition: string;
+    };
+    objects: {
+      people: string[];
+      items: string[];
+      environment: string[];
+    };
+    actions: {
+      primary: string;
+      secondary: string[];
+      movements: string[];
+    };
+    technical: {
+      lighting: string;
+      cameraAngle: string;
+      visualQuality: string;
+    };
   };
 }
 
@@ -214,7 +275,7 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-0125",
+      model: "gpt-4-vision-preview",
       messages: [
         {
           role: "user",
@@ -255,11 +316,8 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
               text: "Focus on providing contextual understanding and semantic relationships between elements."
             },
             {
-              type: "image",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-                detail: "auto"
-              }
+              type: "image_url",
+              url: `data:image/jpeg;base64,${base64Image}`
             }
           ]
         }

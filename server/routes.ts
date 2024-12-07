@@ -94,8 +94,11 @@ export function registerRoutes(app: Express) {
       console.log('Video record created:', video);
 
       // Process video frames in the background
+      console.log('Starting video processing for:', { videoId: video.id, videoPath });
+      
       processVideo(video.id, videoPath)
         .then(() => {
+          console.log('Video processing completed successfully:', video.id);
           // Update processing status to completed
           return db.update(videos)
             .set({ processingStatus: 'completed' })
@@ -107,6 +110,12 @@ export function registerRoutes(app: Express) {
           await db.update(videos)
             .set({ processingStatus: 'failed' })
             .where(eq(videos.id, video.id));
+          // Log the full error details
+          console.error('Full error details:', {
+            message: error.message,
+            stack: error.stack,
+            videoId: video.id
+          });
         });
 
       res.json(video);
