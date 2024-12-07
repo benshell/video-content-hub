@@ -20,11 +20,30 @@ interface VideoWithKeyframes extends Video {
     timestamp: number;
     thumbnailUrl?: string;
     metadata?: {
-      description: string;
-      objects: string[];
-      actions: string[];
+      semanticDescription: {
+        summary: string;
+        keyElements: string[];
+        mood: string;
+        composition: string;
+      };
+      objects: {
+        people: string[];
+        items: string[];
+        environment: string[];
+      };
+      actions: {
+        primary: string;
+        secondary: string[];
+        movements: string[];
+      };
+      technical: {
+        lighting: string;
+        cameraAngle: string;
+        visualQuality: string;
+      };
     };
   }>;
+  tags: Tag[];
 }
 
 export default function VideoProcessing() {

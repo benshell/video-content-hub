@@ -52,7 +52,7 @@ export async function uploadVideo({ formData, onProgress }: UploadVideoParams): 
   });
 }
 
-export async function fetchVideos(): Promise<Video[]> {
+export async function fetchVideos(): Promise<(Video & { keyframes: Keyframe[] })[]> {
   const response = await fetch('/api/videos');
   if (!response.ok) {
     throw new Error('Failed to fetch videos');

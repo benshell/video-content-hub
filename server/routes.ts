@@ -117,9 +117,15 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/videos', async (req, res) => {
     try {
-      const allVideos = await db.select().from(videos);
+      const allVideos = await db.query.videos.findMany({
+        with: {
+          keyframes: true,
+          tags: true
+        }
+      });
       res.json(allVideos);
     } catch (error) {
+      console.error('Error fetching videos:', error);
       res.status(500).json({ error: "Failed to fetch videos" });
     }
   });
