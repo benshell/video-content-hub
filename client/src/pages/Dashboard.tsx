@@ -5,7 +5,14 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import VideoUpload from "../components/VideoUpload";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,6 +77,12 @@ export default function Dashboard() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Upload New Video</DialogTitle>
+              <DialogDescription>
+                Upload your video file to analyze and manage its content. Supported formats: MP4, MOV, AVI, WebM.
+              </DialogDescription>
+            </DialogHeader>
             <VideoUpload onSuccess={() => setIsUploadOpen(false)} />
           </DialogContent>
         </Dialog>
