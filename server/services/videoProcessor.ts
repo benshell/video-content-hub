@@ -207,8 +207,14 @@ interface AnalyzedFrame {
 async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
   try {
     console.log("Starting frame analysis with GPT-4 Vision...");
+    
+    // Verify OpenAI API key is set
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OpenAI API key is not configured");
+    }
+
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-vision-0125",
       messages: [
         {
           role: "user",
@@ -246,11 +252,14 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
             },
             {
               type: "text", 
-              text: "Focus on providing contextual understanding and semantic relationships between elements. Describe the significance of what's happening, not just what's visible."
+              text: "Focus on providing contextual understanding and semantic relationships between elements."
             },
             {
-              type: "image", 
-              image_url: `data:image/jpeg;base64,${base64Image}`
+              type: "image",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+                detail: "auto"
+              }
             }
           ]
         }
@@ -261,13 +270,19 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
     });
 
     if (!response.choices[0]?.message?.content) {
-      console.error("No content in OpenAI response");
-      throw new Error("No analysis received");
+      console.error("No content in OpenAI response:", response);
+      throw new Error("No analysis received from OpenAI API");
     }
 
-    console.log("Received GPT-4 Vision response:", response.choices[0].message.content);
-
-    const analysis = JSON.parse(response.choices[0].message.content);
+    console.log("Received GPT-4 Vision response");
+    
+    let analysis;
+    try {
+      analysis = JSON.parse(response.choices[0].message.content);
+    } catch (parseError) {
+      console.error("Failed to parse OpenAI response:", response.choices[0].message.content);
+      throw new Error("Invalid JSON response from OpenAI API");
+    }
     
     // Validate and transform the analysis
     const transformedTags = (analysis.tags || []).map((tag: any) => {
