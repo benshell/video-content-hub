@@ -17,6 +17,7 @@ export const tags = pgTable("tags", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   videoId: integer("video_id").references(() => videos.id),
   name: text("name").notNull(),
+  category: text("category").notNull().default('general'),
   timestamp: integer("timestamp").notNull(),
   confidence: integer("confidence"),
   aiGenerated: integer("ai_generated").default(0),

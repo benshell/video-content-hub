@@ -58,6 +58,7 @@ export default function ReviewAgent({ video }: ReviewAgentProps) {
     createTagMutation.mutate({
       videoId: video.id,
       name: suggestion.name,
+      category: 'ai-generated',
       timestamp: suggestion.timestamp,
       confidence: suggestion.confidence,
       aiGenerated: 1

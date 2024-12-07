@@ -84,12 +84,13 @@ export function registerRoutes(app: Express) {
   // Tag management
   app.post('/api/videos/:id/tags', async (req, res) => {
     try {
-      const { name, timestamp, confidence, aiGenerated } = req.body;
+      const { name, category, timestamp, confidence, aiGenerated } = req.body;
       const videoId = parseInt(req.params.id);
 
       const [tag] = await db.insert(tags).values({
         videoId,
         name,
+        category,
         timestamp,
         confidence,
         aiGenerated
