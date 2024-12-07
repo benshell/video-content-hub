@@ -4,7 +4,8 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
 import { db } from "../../db";
-import { keyframes, tags } from "@db/schema";
+import { videos, keyframes, tags } from "@db/schema";
+import { eq } from "drizzle-orm";
 
 // Configure ffmpeg path
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';

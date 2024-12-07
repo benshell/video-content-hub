@@ -42,21 +42,34 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: "No video file uploaded" });
       }
 
+      if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+
+      console.log('Processing video upload:', { title, filename: file.filename });
+
       const [video] = await db.insert(videos).values({
-        title,
-        description,
+        title: title.trim(),
+        description: description?.trim() || '',
         url: `/uploads/${file.filename}`,
         thumbnailUrl: null,
         duration: null,
       }).returning();
 
+      console.log('Video record created:', video);
+
       // Process video frames in the background
       processVideo(video.id, path.join(uploadsDir, file.filename))
-        .catch(error => console.error('Error processing video:', error));
+        .catch(error => {
+          console.error('Error processing video:', error);
+          // Don't let processing errors affect the upload response
+          // The video is saved, processing can be retried later if needed
+        });
 
       res.json(video);
     } catch (error) {
-      res.status(500).json({ error: "Failed to upload video" });
+      console.error('Error in video upload:', error);
+      res.status(500).json({ error: "Failed to upload video. Please try again." });
     }
   });
 
