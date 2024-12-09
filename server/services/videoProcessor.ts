@@ -238,44 +238,129 @@ async function extractFrames(videoPath: string, outputDir: string, retryCount = 
         .on('end', async () => {
           try {
             console.log('Frame extraction completed, starting verification...');
-            const files = await fs.readdir(outputDir);
-            const frameFiles = files.filter(f => f.startsWith('frame-') && f.endsWith('.jpg'));
+            let files;
+            try {
+              files = await fs.readdir(outputDir);
+            } catch (error) {
+              console.error('Error reading output directory:', error);
+              throw new Error(`Failed to read frame directory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+
+            // Use a more strict regex pattern for frame files and proper numeric sorting
+            const framePattern = /^frame-(\d+)\.jpg$/;
+            const frameFiles = files
+              .filter(f => {
+                const match = f.match(framePattern);
+                if (!match) return false;
+                const num = parseInt(match[1]);
+                return !isNaN(num) && num >= 0;
+              })
+              .sort((a, b) => {
+                // Ensure we extract numbers properly for sorting
+                const numA = parseInt(a.match(framePattern)![1]);
+                const numB = parseInt(b.match(framePattern)![1]);
+                if (isNaN(numA) || isNaN(numB)) {
+                  console.warn(`Invalid frame number detected during sorting: ${a} or ${b}`);
+                  return 0;
+                }
+                return numA - numB;
+              });
+
+            if (frameFiles.length === 0) {
+              throw new Error('No valid frame files found matching the required pattern');
+            }
+
+            console.log(`Found ${frameFiles.length} valid frame files matching pattern`);
+            // Log first few and last few frames for verification
+            if (frameFiles.length > 0) {
+              console.log('First 3 frames:', frameFiles.slice(0, 3));
+              console.log('Last 3 frames:', frameFiles.slice(-3));
+            }
             
-            console.log(`Found ${frameFiles.length} potential frame files`);
+            console.log(`Found ${frameFiles.length} potential frame files matching pattern`);
             
             // Process frames in batches to avoid memory issues
             const BATCH_SIZE = 50;
+            const validationErrors: string[] = [];
+
             for (let i = 0; i < frameFiles.length; i += BATCH_SIZE) {
-              const batch = frameFiles.slice(i, i + BATCH_SIZE).sort();
+              const batch = frameFiles.slice(i, i + BATCH_SIZE);
               
               await Promise.all(batch.map(async (file) => {
-                const frameNumber = parseInt(file.replace('frame-', '').replace('.jpg', ''));
-                if (!isNaN(frameNumber)) {
-                  const framePath = path.join(outputDir, file);
+                const frameMatch = file.match(framePattern);
+                if (!frameMatch) {
+                  validationErrors.push(`Invalid frame filename format: ${file}`);
+                  return;
+                }
+
+                const frameNumber = parseInt(frameMatch[1]);
+                if (isNaN(frameNumber) || frameNumber < 0) {
+                  validationErrors.push(`Invalid frame number in filename: ${file}`);
+                  return;
+                }
+
+                const framePath = path.join(outputDir, file);
+                
+                try {
+                  // Verify file existence and accessibility
+                  await fs.access(framePath, fs.constants.R_OK);
+                  
+                  // Get file stats
+                  const stats = await fs.stat(framePath);
+                  
+                  if (stats.size === 0) {
+                    validationErrors.push(`Empty frame file: ${file}`);
+                    await fs.unlink(framePath).catch(err => 
+                      console.error(`Failed to delete empty frame ${file}:`, err)
+                    );
+                    return;
+                  }
+
+                  if (!stats.isFile()) {
+                    validationErrors.push(`Not a regular file: ${file}`);
+                    return;
+                  }
+
+                  // Verify image integrity using sharp
                   try {
-                    const stats = await fs.stat(framePath);
-                    if (stats.size > 0) {
-                      // Verify image integrity
-                      try {
-                        await sharp(framePath).metadata();
-                        frames.push({
-                          timestamp: frameNumber,
-                          path: framePath
-                        });
-                        console.log(`Verified frame ${frameNumber} (${stats.size} bytes)`);
-                      } catch (sharpError) {
-                        console.warn(`Invalid image file for frame ${frameNumber}:`, sharpError.message);
-                        await fs.unlink(framePath).catch(console.error);
-                      }
-                    } else {
-                      console.warn(`Empty frame file: ${framePath}`);
-                      await fs.unlink(framePath).catch(console.error);
+                    const metadata = await sharp(framePath).metadata();
+                    if (!metadata.width || !metadata.height) {
+                      throw new Error('Invalid image dimensions');
                     }
-                  } catch (error) {
-                    console.warn(`Failed to verify frame ${frameNumber}:`, error.message);
+
+                    frames.push({
+                      timestamp: frameNumber,
+                      path: framePath
+                    });
+                    console.log(`Verified frame ${frameNumber} (${stats.size} bytes, ${metadata.width}x${metadata.height})`);
+                  } catch (sharpError) {
+                    validationErrors.push(`Invalid image data in frame ${frameNumber}: ${sharpError instanceof Error ? sharpError.message : 'Unknown error'}`);
+                    await fs.unlink(framePath).catch(err => 
+                      console.error(`Failed to delete invalid frame ${file}:`, err)
+                    );
+                  }
+                } catch (error) {
+                  if (error instanceof Error && 'code' in error) {
+                    switch (error.code) {
+                      case 'ENOENT':
+                        validationErrors.push(`Frame file not found: ${file}`);
+                        break;
+                      case 'EACCES':
+                        validationErrors.push(`Permission denied accessing frame: ${file}`);
+                        break;
+                      default:
+                        validationErrors.push(`Error processing frame ${file}: ${error.message}`);
+                    }
+                  } else {
+                    validationErrors.push(`Unknown error processing frame ${file}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                   }
                 }
               }));
+            }
+
+            // Log validation errors if any
+            if (validationErrors.length > 0) {
+              console.warn('Frame validation errors:', validationErrors);
             }
 
             if (frames.length === 0) {
