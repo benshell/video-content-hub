@@ -178,76 +178,152 @@ export async function processVideo(videoId: number, videoPath: string) {
   }
 }
 
-async function extractFrames(videoPath: string, outputDir: string): Promise<ExtractedFrame[]> {
-  return new Promise((resolve, reject) => {
+async function extractFrames(videoPath: string, outputDir: string, retryCount = 3): Promise<ExtractedFrame[]> {
+  // Validate input video file
+  try {
+    await fs.access(videoPath);
+    const stats = await fs.stat(videoPath);
+    if (stats.size === 0) {
+      throw new Error('Video file is empty');
+    }
+    console.log(`Video file validated: ${videoPath} (${stats.size} bytes)`);
+  } catch (error) {
+    throw new Error(`Invalid video file: ${error.message}`);
+  }
+
+  // Function to attempt frame extraction with different settings
+  const attemptExtraction = async (attempt: number): Promise<ExtractedFrame[]> => {
     const frames: ExtractedFrame[] = [];
-    
-    console.log(`Starting frame extraction from: ${videoPath}`);
+    console.log(`Attempt ${attempt + 1} of ${retryCount}: Starting frame extraction`);
+    console.log(`Source: ${videoPath}`);
     console.log(`Output directory: ${outputDir}`);
-    
-    ffmpeg(videoPath)
-      .outputOptions([
-        '-vf', 'fps=1', // Extract 1 frame per second
-        '-frame_pts', '1',
-        '-qscale:v', '2', // High quality frames
-        '-frames:v', '300' // Limit to 300 frames (5 minutes) for processing
-      ])
-      .on('start', (command) => {
-        console.log('FFmpeg started with command:', command);
-      })
-      .on('progress', (progress) => {
-        console.log('FFmpeg Progress:', progress);
-      })
-      .output(path.join(outputDir, 'frame-%d.jpg'))
-      .on('end', async () => {
-        try {
-          console.log('Frame extraction completed, verifying frames...');
-          const files = await fs.readdir(outputDir);
-          const frameFiles = files.filter(f => f.startsWith('frame-') && f.endsWith('.jpg'));
-          
-          console.log(`Found ${frameFiles.length} potential frame files`);
-          
-          for (const file of frameFiles.sort()) {
-            const frameNumber = parseInt(file.replace('frame-', '').replace('.jpg', ''));
-            if (!isNaN(frameNumber)) {
-              const framePath = path.join(outputDir, file);
-              try {
-                // Verify file exists and is accessible
-                await fs.access(framePath);
-                // Get file stats to verify it's a valid file
-                const stats = await fs.stat(framePath);
-                if (stats.size > 0) {
-                  frames.push({
-                    timestamp: frameNumber,
-                    path: framePath
-                  });
-                  console.log(`Verified frame ${frameNumber} at ${framePath} (${stats.size} bytes)`);
-                } else {
-                  console.warn(`Skipping empty frame file: ${framePath}`);
+
+    // Adjust settings based on attempt number
+    const settings = {
+      fps: attempt === 0 ? 1 : 0.5, // Reduce frame rate on retry
+      quality: Math.max(2, 3 + attempt), // Decrease quality on retry
+      maxFrames: 300 - (attempt * 50), // Reduce frame limit on retry
+    };
+
+    return new Promise((resolve, reject) => {
+      let ffmpegCommand = ffmpeg(videoPath)
+        .outputOptions([
+          '-vf', `fps=${settings.fps}`,
+          '-frame_pts', '1',
+          '-qscale:v', settings.quality.toString(),
+          '-frames:v', settings.maxFrames.toString()
+        ]);
+
+      // Add hardware acceleration if available (attempt 0 only)
+      if (attempt === 0) {
+        ffmpegCommand = ffmpegCommand
+          .outputOptions(['-hwaccel', 'auto']);
+      }
+
+      // Add more detailed progress logging
+      let lastProgress = 0;
+      ffmpegCommand
+        .on('start', (command) => {
+          console.log('FFmpeg command:', command);
+          console.log(`Settings: FPS=${settings.fps}, Quality=${settings.quality}, Max Frames=${settings.maxFrames}`);
+        })
+        .on('progress', (progress) => {
+          const currentProgress = Math.floor(progress.percent || 0);
+          if (currentProgress > lastProgress) {
+            lastProgress = currentProgress;
+            console.log(`Processing: ${currentProgress}% complete`);
+          }
+        })
+        .output(path.join(outputDir, 'frame-%d.jpg'))
+        .on('end', async () => {
+          try {
+            console.log('Frame extraction completed, starting verification...');
+            const files = await fs.readdir(outputDir);
+            const frameFiles = files.filter(f => f.startsWith('frame-') && f.endsWith('.jpg'));
+            
+            console.log(`Found ${frameFiles.length} potential frame files`);
+            
+            // Process frames in batches to avoid memory issues
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < frameFiles.length; i += BATCH_SIZE) {
+              const batch = frameFiles.slice(i, i + BATCH_SIZE).sort();
+              
+              await Promise.all(batch.map(async (file) => {
+                const frameNumber = parseInt(file.replace('frame-', '').replace('.jpg', ''));
+                if (!isNaN(frameNumber)) {
+                  const framePath = path.join(outputDir, file);
+                  try {
+                    const stats = await fs.stat(framePath);
+                    if (stats.size > 0) {
+                      // Verify image integrity
+                      try {
+                        await sharp(framePath).metadata();
+                        frames.push({
+                          timestamp: frameNumber,
+                          path: framePath
+                        });
+                        console.log(`Verified frame ${frameNumber} (${stats.size} bytes)`);
+                      } catch (sharpError) {
+                        console.warn(`Invalid image file for frame ${frameNumber}:`, sharpError.message);
+                        await fs.unlink(framePath).catch(console.error);
+                      }
+                    } else {
+                      console.warn(`Empty frame file: ${framePath}`);
+                      await fs.unlink(framePath).catch(console.error);
+                    }
+                  } catch (error) {
+                    console.warn(`Failed to verify frame ${frameNumber}:`, error.message);
+                  }
                 }
-              } catch (error) {
-                console.warn(`Failed to verify frame ${frameNumber}:`, error);
-              }
+              }));
             }
+
+            if (frames.length === 0) {
+              reject(new Error('No valid frames extracted'));
+            } else {
+              console.log(`Successfully verified ${frames.length} frames`);
+              resolve(frames.sort((a, b) => a.timestamp - b.timestamp));
+            }
+          } catch (error) {
+            console.error('Error during frame verification:', error);
+            reject(error);
           }
-          
-          if (frames.length === 0) {
-            reject(new Error('No valid frames were extracted from the video'));
-          } else {
-            console.log(`Successfully verified ${frames.length} frames`);
-            resolve(frames.sort((a, b) => a.timestamp - b.timestamp));
-          }
-        } catch (error) {
-          console.error('Error verifying frames:', error);
-          reject(error);
-        }
-      })
-      .on('error', (err) => {
-        console.error('Error in FFmpeg frame extraction:', err);
-        reject(err);
-      })
-      .run();
-  });
+        })
+        .on('error', (err) => {
+          console.error(`FFmpeg error (attempt ${attempt + 1}):`, err.message);
+          reject(err);
+        })
+        .run();
+    });
+  };
+
+  // Implement retry logic with exponential backoff
+  let lastError;
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      if (attempt > 0) {
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 10000);
+        console.log(`Waiting ${backoffMs}ms before retry ${attempt + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      }
+      return await attemptExtraction(attempt);
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${attempt + 1} failed:`, error.message);
+      
+      // Clean up any partial results
+      try {
+        const files = await fs.readdir(outputDir);
+        await Promise.all(files.map(file => 
+          fs.unlink(path.join(outputDir, file)).catch(console.error)
+        ));
+      } catch (cleanupError) {
+        console.warn('Failed to clean up after failed attempt:', cleanupError.message);
+      }
+    }
+  }
+
+  throw new Error(`Frame extraction failed after ${retryCount} attempts. Last error: ${lastError?.message}`);
 }
 
 interface AnalyzedFrame {
