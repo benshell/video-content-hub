@@ -43,7 +43,7 @@ interface ProcessedKeyframe {
   id: number;
   timestamp: number;
   thumbnailUrl?: string;
-  metadata?: FrameMetadata;
+  metadata?: string | number | boolean | { [key: string]: any } | any[];
 }
 
 interface VideoWithKeyframes extends Video {
@@ -58,8 +58,8 @@ type VideoProcessingStatus = {
 };
 
 export default function VideoProcessing() {
-  const { data: videos, isLoading } = useQuery<VideoWithKeyframes[], Error>({
-    queryKey: ["videos"],
+  const { data: videos, isLoading } = useQuery({
+    queryKey: ["videos"] as const,
     queryFn: fetchVideos,
     refetchInterval: 5000 // Refetch every 5 seconds to update processing status
   });
@@ -164,31 +164,43 @@ export default function VideoProcessing() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                       <h4 className="font-semibold text-base mb-2">Objects</h4>
-                                      {keyframe.metadata.objects?.people?.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.people) && 
+                                       (keyframe.metadata.objects as any).people.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">People</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.people.map((person: string, i: number) => (
+                                            {((keyframe.metadata.objects as any).people as string[]).map((person: string, i: number) => (
                                               <Badge key={i} variant="secondary">{person}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.objects?.items?.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.items) && 
+                                       (keyframe.metadata.objects as any).items.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Items</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.items.map((item: string, i: number) => (
+                                            {((keyframe.metadata.objects as any).items as string[]).map((item: string, i: number) => (
                                               <Badge key={i} variant="secondary">{item}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.objects?.environment?.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.environment) && 
+                                       (keyframe.metadata.objects as any).environment.length > 0 && (
                                         <div>
                                           <p className="font-medium text-gray-600">Environment</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.environment.map((env: string, i: number) => (
+                                            {((keyframe.metadata.objects as any).environment as string[]).map((env: string, i: number) => (
                                               <Badge key={i} variant="secondary">{env}</Badge>
                                             ))}
                                           </div>

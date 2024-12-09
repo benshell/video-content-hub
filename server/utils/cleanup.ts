@@ -45,7 +45,7 @@ export async function cleanupUnusedVideos() {
         }
       }
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (error instanceof Error && 'code' in error && error.code !== 'ENOENT') {
         console.error('Error cleaning up videos directory:', error);
       }
     }
@@ -65,7 +65,7 @@ export async function cleanupUnusedVideos() {
         }
       }
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (error instanceof Error && 'code' in error && error.code !== 'ENOENT') {
         console.error('Error cleaning up thumbnails directory:', error);
       }
     }
@@ -86,7 +86,7 @@ export async function cleanupUnusedVideos() {
         }
       }
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (error instanceof Error && 'code' in error && error.code !== 'ENOENT') {
         console.error('Error cleaning up frames directory:', error);
       }
     }

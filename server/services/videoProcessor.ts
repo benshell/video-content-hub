@@ -316,8 +316,12 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
               text: "Focus on providing contextual understanding and semantic relationships between elements."
             },
             {
-              type: "image_url",
-              url: `data:image/jpeg;base64,${base64Image}`
+              type: "text",
+              text: "Here's the image to analyze:"
+            },
+            {
+              type: "text",
+              text: `data:image/jpeg;base64,${base64Image}`
             }
           ]
         }
