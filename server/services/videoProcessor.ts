@@ -37,11 +37,75 @@ interface ExtractedFrame {
   path: string;
 }
 
+// Helper function to get system memory usage
+async function getSystemMemoryUsage(): Promise<number> {
+  try {
+    const totalMem = process.memoryUsage().heapTotal;
+    const usedMem = process.memoryUsage().heapUsed;
+    return (usedMem / totalMem) * 100;
+  } catch (error) {
+    console.warn('Failed to get memory usage:', error);
+    return 50; // Default to 50% if unable to determine
+  }
+}
+
+// Helper function to calculate optimal batch size based on memory usage
+async function calculateOptimalBatchSize(): Promise<number> {
+  const memoryUsage = await getSystemMemoryUsage();
+  const baseBatchSize = 5;
+  
+  if (memoryUsage > 80) {
+    return Math.max(1, Math.floor(baseBatchSize / 2));
+  } else if (memoryUsage > 60) {
+    return baseBatchSize;
+  } else {
+    return baseBatchSize * 2;
+  }
+}
+
 export async function processVideo(videoId: number, videoPath: string) {
   const framesDir = path.join(process.cwd(), 'uploads', 'frames', videoId.toString());
   
   try {
     console.log(`Starting video processing for videoId: ${videoId}`);
+    
+    // Pre-validate video file
+    console.log('Pre-validating video file...');
+    try {
+      const stats = await fs.stat(videoPath);
+      if (stats.size === 0) {
+        throw new Error('Video file is empty');
+      }
+      
+      // Validate video format and duration
+      const videoInfo = await new Promise<any>((resolve, reject) => {
+        ffmpeg.ffprobe(videoPath, (err, metadata) => {
+          if (err) reject(err);
+          else resolve(metadata);
+        });
+      });
+      
+      if (!videoInfo.format || !videoInfo.format.duration) {
+        throw new Error('Invalid video format or duration');
+      }
+      
+      if (videoInfo.format.duration < 1) {
+        throw new Error('Video is too short (less than 1 second)');
+      }
+      
+      console.log('Video pre-validation successful:', {
+        size: stats.size,
+        duration: videoInfo.format.duration,
+        format: videoInfo.format.format_name
+      });
+      
+    } catch (error) {
+      console.error('Video pre-validation failed:', error);
+      await db.update(videos)
+        .set({ processingStatus: 'failed' })
+        .where(eq(videos.id, videoId));
+      throw new Error(`Video validation failed: ${error.message}`);
+    }
     
     // Update video status to processing
     await db.update(videos)
@@ -51,8 +115,6 @@ export async function processVideo(videoId: number, videoPath: string) {
     // Ensure the frames directory exists and is empty
     await fs.rm(framesDir, { recursive: true, force: true }).catch(() => {});
     await fs.mkdir(framesDir, { recursive: true });
-    
-    console.log(`Starting video processing for videoId: ${videoId}`);
     
     // Get video duration and update video record
     const duration = await new Promise<number>((resolve, reject) => {
@@ -93,14 +155,22 @@ export async function processVideo(videoId: number, videoPath: string) {
       .set({ totalFrames: frames.length })
       .where(eq(videos.id, videoId));
 
-    // Process frames in smaller batches to avoid memory issues
-    const BATCH_SIZE = 3; // Reduced batch size for more reliable processing
+    // Process frames with dynamic batch sizes based on memory usage
     let processedFrames = 0;
     let totalTags = 0;
-
-    for (let i = 0; i < frames.length; i += BATCH_SIZE) {
-      const batch = frames.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(frames.length/BATCH_SIZE)}`);
+    
+    while (processedFrames < frames.length) {
+      // Calculate optimal batch size based on current memory usage
+      const batchSize = await calculateOptimalBatchSize();
+      const remainingFrames = frames.length - processedFrames;
+      const currentBatchSize = Math.min(batchSize, remainingFrames);
+      
+      const batch = frames.slice(processedFrames, processedFrames + currentBatchSize);
+      const batchNumber = Math.floor(processedFrames / currentBatchSize) + 1;
+      const totalBatches = Math.ceil(frames.length / currentBatchSize);
+      
+      console.log(`Processing batch ${batchNumber}/${totalBatches} with size ${currentBatchSize}`);
+      console.log(`Memory usage before batch: ${await getSystemMemoryUsage()}%`);
 
       await Promise.all(batch.map(async (frame) => {
         try {
