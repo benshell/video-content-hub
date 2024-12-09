@@ -7,9 +7,25 @@ import { db } from "../../db";
 import { videos, keyframes, tags } from "@db/schema";
 import { eq } from "drizzle-orm";
 
-// Configure ffmpeg path
+// Configure ffmpeg path and verify installation
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+
+try {
+  console.log('FFmpeg installer version:', ffmpegPath.version);
+  ffmpeg.setFfmpegPath(ffmpegPath.path);
+  
+  // Verify ffmpeg is working
+  ffmpeg.getAvailableFormats((err, formats) => {
+    if (err) {
+      console.error('Error checking FFmpeg formats:', err);
+    } else {
+      console.log('FFmpeg initialized successfully');
+    }
+  });
+} catch (error) {
+  console.error('Failed to initialize FFmpeg:', error);
+  throw new Error('FFmpeg initialization failed');
+}
 
 // Initialize OpenAI client
 const openai = new OpenAI({
