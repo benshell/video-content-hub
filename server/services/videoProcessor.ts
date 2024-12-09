@@ -200,10 +200,12 @@ async function extractFrames(videoPath: string, outputDir: string, retryCount = 
 
     // Adjust settings based on attempt number
     const settings = {
-      fps: attempt === 0 ? 1 : 0.5, // Reduce frame rate on retry
-      quality: Math.max(2, 3 + attempt), // Decrease quality on retry
-      maxFrames: 300 - (attempt * 50), // Reduce frame limit on retry
+      fps: attempt === 0 ? 2 : 1, // Extract 2 frames per second initially, fallback to 1
+      quality: Math.max(2, attempt === 0 ? 2 : 3 + attempt), // Keep high quality initially
+      maxFrames: attempt === 0 ? 600 : Math.max(300, 600 - (attempt * 100)), // Allow more frames initially
     };
+
+    console.log(`Extraction settings for attempt ${attempt + 1}:`, settings);
 
     return new Promise((resolve, reject) => {
       let ffmpegCommand = ffmpeg(videoPath)
@@ -222,17 +224,32 @@ async function extractFrames(videoPath: string, outputDir: string, retryCount = 
 
       // Add more detailed progress logging
       let lastProgress = 0;
+      let framesProcessed = 0;
       ffmpegCommand
         .on('start', (command) => {
           console.log('FFmpeg command:', command);
-          console.log(`Settings: FPS=${settings.fps}, Quality=${settings.quality}, Max Frames=${settings.maxFrames}`);
+          console.log(`Extraction settings:`, {
+            fps: settings.fps,
+            quality: settings.quality,
+            maxFrames: settings.maxFrames,
+            attempt: attempt + 1,
+            totalAttempts: retryCount
+          });
         })
         .on('progress', (progress) => {
           const currentProgress = Math.floor(progress.percent || 0);
           if (currentProgress > lastProgress) {
             lastProgress = currentProgress;
-            console.log(`Processing: ${currentProgress}% complete`);
+            if (progress.frames) {
+              framesProcessed = progress.frames;
+              console.log(`Processing: ${currentProgress}% complete (${framesProcessed} frames processed)`);
+            } else {
+              console.log(`Processing: ${currentProgress}% complete`);
+            }
           }
+        })
+        .on('end', () => {
+          console.log(`Frame extraction completed. Processed ${framesProcessed} frames.`);
         })
         .output(path.join(outputDir, 'frame-%d.jpg'))
         .on('end', async () => {
