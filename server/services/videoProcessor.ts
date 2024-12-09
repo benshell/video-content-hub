@@ -294,61 +294,62 @@ async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
       model: "gpt-4-vision-preview",
       messages: [
         {
+          role: "system",
+          content: "You are a video frame analysis assistant. Always respond with valid JSON format following the specified schema. Be precise and detailed in your analysis."
+        },
+        {
           role: "user",
           content: [
             { 
               type: "text", 
-              text: `Analyze this video frame and provide a detailed analysis in the following JSON format:
+              text: `Analyze this video frame and format your response as valid JSON with this exact structure:
 {
   "tags": [
     {"name": "string", "category": "person|object|action|scene", "confidence": number}
   ],
   "semanticDescription": {
-    "summary": "A concise but detailed description of the scene",
-    "keyElements": ["Important visual elements"],
-    "mood": "Overall mood or atmosphere",
-    "composition": "Description of visual composition and framing"
+    "summary": "string",
+    "keyElements": ["string"],
+    "mood": "string",
+    "composition": "string"
   },
   "objects": {
-    "people": ["Detailed descriptions of people"],
-    "items": ["Notable objects or props"],
-    "environment": ["Background and setting elements"]
+    "people": ["string"],
+    "items": ["string"],
+    "environment": ["string"]
   },
   "actions": {
-    "primary": "Main action occurring",
-    "secondary": ["Other notable activities"],
-    "movements": ["Specific movements or gestures"]
+    "primary": "string",
+    "secondary": ["string"],
+    "movements": ["string"]
   },
   "technical": {
-    "lighting": "Description of lighting conditions",
-    "cameraAngle": "Camera perspective",
-    "visualQuality": "Image quality and clarity"
+    "lighting": "string",
+    "cameraAngle": "string",
+    "visualQuality": "string"
   }
-}
-Provide rich, contextual analysis that captures both technical and semantic aspects. Be specific and detailed.`
+}`
             },
             {
               type: "text", 
-              text: "Focus on providing contextual understanding and semantic relationships between elements."
+              text: "Provide rich, contextual analysis that captures both technical and semantic aspects. Focus on specific details and relationships between elements. Your response must be valid JSON."
             },
             {
-              type: "text",
-              text: "Here's the image to analyze:"
-            },
-            {
-              type: "text",
-              text: `data:image/jpeg;base64,${base64Image}`
+              type: "image",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
+              }
             }
           ]
         }
       ],
-      max_tokens: 1000,
-      temperature: 0.5,
-      response_format: { type: "json_object" }
+      max_tokens: 1500,
+      temperature: 0.3
     });
 
-    if (!response.choices[0]?.message?.content) {
-      console.error("No content in OpenAI response:", response);
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      console.error("Empty or invalid response from OpenAI:", response);
       throw new Error("No analysis received from OpenAI API");
     }
 
@@ -356,10 +357,22 @@ Provide rich, contextual analysis that captures both technical and semantic aspe
     
     let analysis;
     try {
-      analysis = JSON.parse(response.choices[0].message.content);
+      // Try to extract JSON from the response if it's wrapped in text
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : content;
+      analysis = JSON.parse(jsonString);
+
+      // Validate required structure
+      if (!analysis.tags || !analysis.semanticDescription || !analysis.objects || 
+          !analysis.actions || !analysis.technical) {
+        throw new Error("Response missing required fields");
+      }
     } catch (parseError) {
-      console.error("Failed to parse OpenAI response:", response.choices[0].message.content);
-      throw new Error("Invalid JSON response from OpenAI API");
+      console.error("Failed to parse OpenAI response:", {
+        error: parseError,
+        content: content.substring(0, 500) + "..." // Log first 500 chars
+      });
+      throw new Error(`Invalid JSON response: ${parseError.message}`);
     }
     
     // Validate and transform the analysis
