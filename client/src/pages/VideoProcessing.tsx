@@ -294,7 +294,7 @@ export default function VideoProcessing() {
                                 : 'Frame summaries will be generated when processing starts.'}
                             </p>
                           </div>
-                          {video.processingStatus === 'processing' && video.totalFrames > 0 && (
+                          {video.processingStatus === 'processing' && video.totalFrames !== null && video.totalFrames > 0 && video.processedFrames !== null && (
                             <div className="space-y-2">
                               <Progress 
                                 value={(video.processedFrames / video.totalFrames) * 100}
