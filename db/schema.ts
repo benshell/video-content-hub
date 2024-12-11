@@ -44,7 +44,29 @@ export const keyframes = pgTable("keyframes", {
   videoId: integer("video_id").notNull().references(() => videos.id),
   timestamp: integer("timestamp").notNull(),
   thumbnailUrl: text("thumbnail_url"),
-  metadata: jsonb("metadata")
+  metadata: jsonb("metadata").$type<{
+    semanticDescription: {
+      summary: string;
+      keyElements: string[];
+      mood: string;
+      composition: string;
+    };
+    objects: {
+      people: string[];
+      items: string[];
+      environment: string[];
+    };
+    actions: {
+      primary: string;
+      secondary: string[];
+      movements: string[];
+    };
+    technical: {
+      lighting: string;
+      cameraAngle: string;
+      visualQuality: string;
+    };
+  } | null>()
 });
 
 export const keyframesRelations = relations(keyframes, ({ one }) => ({

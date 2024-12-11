@@ -39,11 +39,35 @@ interface FrameMetadata {
   };
 }
 
+interface FrameMetadata {
+  semanticDescription: {
+    summary: string;
+    keyElements: string[];
+    mood: string;
+    composition: string;
+  };
+  objects: {
+    people: string[];
+    items: string[];
+    environment: string[];
+  };
+  actions: {
+    primary: string;
+    secondary: string[];
+    movements: string[];
+  };
+  technical: {
+    lighting: string;
+    cameraAngle: string;
+    visualQuality: string;
+  };
+}
+
 interface ProcessedKeyframe {
   id: number;
   timestamp: number;
   thumbnailUrl?: string;
-  metadata?: string | number | boolean | { [key: string]: any } | any[];
+  metadata?: FrameMetadata;
 }
 
 interface VideoWithKeyframes extends Video {
@@ -156,7 +180,7 @@ export default function VideoProcessing() {
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Composition</p>
-                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription?.composition}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.composition}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -212,23 +236,23 @@ export default function VideoProcessing() {
                                       <h4 className="font-semibold text-base mb-2">Actions</h4>
                                       <div className="mb-3">
                                         <p className="font-medium text-gray-600">Primary Action</p>
-                                        <p className="text-gray-700">{keyframe.metadata.actions?.primary}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.actions?.primary}</p>
                                       </div>
-                                      {keyframe.metadata.actions?.secondary?.length > 0 && (
+                                      {keyframe.metadata?.actions?.secondary?.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Secondary Actions</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.secondary.map((action: string, i: number) => (
+                                            {keyframe.metadata?.actions?.secondary?.map((action: string, i: number) => (
                                               <Badge key={i}>{action}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.actions?.movements?.length > 0 && (
+                                      {keyframe.metadata?.actions?.movements?.length > 0 && (
                                         <div>
                                           <p className="font-medium text-gray-600">Movements</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.movements.map((movement: string, i: number) => (
+                                            {keyframe.metadata?.actions?.movements?.map((movement: string, i: number) => (
                                               <Badge key={i}>{movement}</Badge>
                                             ))}
                                           </div>
@@ -242,15 +266,15 @@ export default function VideoProcessing() {
                                     <div className="grid grid-cols-3 gap-4">
                                       <div>
                                         <p className="font-medium text-gray-600">Lighting</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical?.lighting}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.lighting}</p>
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Camera Angle</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical?.cameraAngle}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.cameraAngle}</p>
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Visual Quality</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical?.visualQuality}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.visualQuality}</p>
                                       </div>
                                     </div>
                                   </div>
