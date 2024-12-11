@@ -39,11 +39,35 @@ interface FrameMetadata {
   };
 }
 
+interface FrameMetadata {
+  semanticDescription: {
+    summary: string;
+    keyElements: string[];
+    mood: string;
+    composition: string;
+  };
+  objects: {
+    people: string[];
+    items: string[];
+    environment: string[];
+  };
+  actions: {
+    primary: string;
+    secondary: string[];
+    movements: string[];
+  };
+  technical: {
+    lighting: string;
+    cameraAngle: string;
+    visualQuality: string;
+  };
+}
+
 interface ProcessedKeyframe {
   id: number;
   timestamp: number;
-  thumbnailUrl?: string | null;
-  metadata: FrameMetadata | null;
+  thumbnailUrl?: string;
+  metadata?: FrameMetadata;
 }
 
 interface VideoWithKeyframes extends Video {
@@ -51,11 +75,17 @@ interface VideoWithKeyframes extends Video {
   tags: Tag[];
 }
 
+type VideoProcessingStatus = {
+  data?: VideoWithKeyframes[];
+  isLoading: boolean;
+  error: unknown;
+};
+
 export default function VideoProcessing() {
   const { data: videos, isLoading } = useQuery({
     queryKey: ["videos"] as const,
     queryFn: fetchVideos,
-    refetchInterval: 5000
+    refetchInterval: 5000 // Refetch every 5 seconds to update processing status
   });
 
   if (isLoading) {
@@ -132,12 +162,12 @@ export default function VideoProcessing() {
                                 <div className="text-sm space-y-4">
                                   <div className="bg-gray-50 p-4 rounded-lg">
                                     <h4 className="font-semibold text-base mb-2">Semantic Analysis</h4>
-                                    <p className="text-gray-700">{keyframe.metadata.semanticDescription.summary}</p>
-                                    {keyframe.metadata.semanticDescription.keyElements.length > 0 && (
+                                    <p className="text-gray-700">{keyframe.metadata.semanticDescription?.summary}</p>
+                                    {keyframe.metadata.semanticDescription?.keyElements?.length > 0 && (
                                       <div className="mt-2">
                                         <p className="font-medium text-gray-600">Key Elements</p>
                                         <div className="flex flex-wrap gap-1 mt-1">
-                                          {keyframe.metadata.semanticDescription.keyElements.map((element, i) => (
+                                          {keyframe.metadata.semanticDescription.keyElements.map((element: string, i: number) => (
                                             <Badge key={i} variant="outline">{element}</Badge>
                                           ))}
                                         </div>
@@ -146,11 +176,11 @@ export default function VideoProcessing() {
                                     <div className="grid grid-cols-2 gap-4 mt-3">
                                       <div>
                                         <p className="font-medium text-gray-600">Mood</p>
-                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription.mood}</p>
+                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription?.mood}</p>
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Composition</p>
-                                        <p className="text-gray-700">{keyframe.metadata.semanticDescription.composition}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.composition}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -158,31 +188,43 @@ export default function VideoProcessing() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                       <h4 className="font-semibold text-base mb-2">Objects</h4>
-                                      {keyframe.metadata.objects.people.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.people) && 
+                                       (keyframe.metadata.objects as any).people.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">People</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.people.map((person, i) => (
+                                            {((keyframe.metadata.objects as any).people as string[]).map((person: string, i: number) => (
                                               <Badge key={i} variant="secondary">{person}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.objects.items.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.items) && 
+                                       (keyframe.metadata.objects as any).items.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Items</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.items.map((item, i) => (
+                                            {((keyframe.metadata.objects as any).items as string[]).map((item: string, i: number) => (
                                               <Badge key={i} variant="secondary">{item}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.objects.environment.length > 0 && (
+                                      {typeof keyframe.metadata === 'object' && 
+                                       keyframe.metadata !== null && 
+                                       'objects' in keyframe.metadata &&
+                                       Array.isArray((keyframe.metadata.objects as any)?.environment) && 
+                                       (keyframe.metadata.objects as any).environment.length > 0 && (
                                         <div>
                                           <p className="font-medium text-gray-600">Environment</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.objects.environment.map((env, i) => (
+                                            {((keyframe.metadata.objects as any).environment as string[]).map((env: string, i: number) => (
                                               <Badge key={i} variant="secondary">{env}</Badge>
                                             ))}
                                           </div>
@@ -194,23 +236,23 @@ export default function VideoProcessing() {
                                       <h4 className="font-semibold text-base mb-2">Actions</h4>
                                       <div className="mb-3">
                                         <p className="font-medium text-gray-600">Primary Action</p>
-                                        <p className="text-gray-700">{keyframe.metadata.actions.primary}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.actions?.primary}</p>
                                       </div>
-                                      {keyframe.metadata.actions.secondary.length > 0 && (
+                                      {keyframe.metadata?.actions?.secondary?.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Secondary Actions</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.secondary.map((action, i) => (
+                                            {keyframe.metadata?.actions?.secondary?.map((action: string, i: number) => (
                                               <Badge key={i}>{action}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {keyframe.metadata.actions.movements.length > 0 && (
+                                      {keyframe.metadata?.actions?.movements?.length > 0 && (
                                         <div>
                                           <p className="font-medium text-gray-600">Movements</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {keyframe.metadata.actions.movements.map((movement, i) => (
+                                            {keyframe.metadata?.actions?.movements?.map((movement: string, i: number) => (
                                               <Badge key={i}>{movement}</Badge>
                                             ))}
                                           </div>
@@ -224,15 +266,15 @@ export default function VideoProcessing() {
                                     <div className="grid grid-cols-3 gap-4">
                                       <div>
                                         <p className="font-medium text-gray-600">Lighting</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical.lighting}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.lighting}</p>
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Camera Angle</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical.cameraAngle}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.cameraAngle}</p>
                                       </div>
                                       <div>
                                         <p className="font-medium text-gray-600">Visual Quality</p>
-                                        <p className="text-gray-700">{keyframe.metadata.technical.visualQuality}</p>
+                                        <p className="text-gray-700">{keyframe.metadata?.technical?.visualQuality}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -252,14 +294,14 @@ export default function VideoProcessing() {
                                 : 'Frame summaries will be generated when processing starts.'}
                             </p>
                           </div>
-                          {(video.processingStatus === 'processing' && typeof video.totalFrames === 'number' && video.totalFrames > 0) && (
+                          {video.processingStatus === 'processing' && video.totalFrames > 0 && (
                             <div className="space-y-2">
                               <Progress 
-                                value={((video.processedFrames || 0) / video.totalFrames) * 100}
+                                value={(video.processedFrames / video.totalFrames) * 100}
                                 className="w-full"
                               />
                               <p className="text-sm text-gray-500 text-center">
-                                Processed {video.processedFrames || 0} of {video.totalFrames} frames
+                                Processed {video.processedFrames} of {video.totalFrames} frames
                               </p>
                               <p className="text-xs text-gray-400 text-center">
                                 This process may take several minutes depending on the video length
