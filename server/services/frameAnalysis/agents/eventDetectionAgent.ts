@@ -44,18 +44,20 @@ export class EventDetectionAgent {
         messages: [
           {
             role: "system",
-            content: `You are an event detection system. Analyze the sequence of frames and return a JSON array of events with this structure:
-[{
-  "startFrame": number,
-  "endFrame": number,
-  "startTime": number,
-  "endTime": number,
-  "eventType": string,
-  "confidence": number,
-  "description": string,
-  "involvedObjects": string[]
-}]
-Return ONLY valid JSON, no other text or explanations.`
+            content: `You are an event detection system. Analyze the sequence of frames and return a JSON object with an events array using this structure:
+{
+  "events": [{
+    "startFrame": number,
+    "endFrame": number,
+    "startTime": number,
+    "endTime": number,
+    "eventType": string,
+    "confidence": number,
+    "description": string,
+    "involvedObjects": string[]
+  }]
+}
+Return ONLY valid JSON with properly formatted events array. No explanatory text.`
           },
           {
             role: "user",
@@ -79,25 +81,53 @@ Return ONLY valid JSON, no other text or explanations.`
       let parsedEvents;
       try {
         parsedEvents = JSON.parse(content);
-        if (!Array.isArray(parsedEvents.events)) {
-          throw new Error('Invalid events array in response');
+        
+        // Handle both array and single object responses
+        let events = [];
+        if (Array.isArray(parsedEvents)) {
+          events = parsedEvents;
+        } else if (parsedEvents.events && Array.isArray(parsedEvents.events)) {
+          events = parsedEvents.events;
+        } else if (typeof parsedEvents === 'object' && parsedEvents.eventType) {
+          // Single event object
+          events = [parsedEvents];
+        } else {
+          console.error('Unexpected response structure:', parsedEvents);
+          return [];
         }
+        
+        // Validate event structure
+        const isValidEvent = (event: any): event is TemporalEvent => 
+          typeof event.startFrame === 'number' &&
+          typeof event.endFrame === 'number' &&
+          typeof event.startTime === 'number' &&
+          typeof event.endTime === 'number' &&
+          typeof event.eventType === 'string' &&
+          typeof event.confidence === 'number' &&
+          typeof event.description === 'string' &&
+          Array.isArray(event.involvedObjects);
+
+        if (!events.every(isValidEvent)) {
+          console.error('Invalid event structure in response');
+          return [];
+        }
+
+        return events.map((event) => ({
+          startFrame: event.startFrame,
+          endFrame: event.endFrame,
+          startTime: event.startTime,
+          endTime: event.endTime,
+          eventType: event.eventType,
+          confidence: event.confidence,
+          description: event.description,
+          involvedObjects: event.involvedObjects,
+        }));
+
       } catch (error) {
         console.error('JSON Parse Error:', error);
         console.error('Raw content causing parse error:', content);
         return [];
       }
-
-      return parsedEvents.events.map((event: any) => ({
-        startFrame: event.startFrame,
-        endFrame: event.endFrame,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        eventType: event.eventType,
-        confidence: event.confidence,
-        description: event.description,
-        involvedObjects: event.involvedObjects,
-      }));
     } catch (error) {
       console.error("Error in event detection:", error);
       throw error;
