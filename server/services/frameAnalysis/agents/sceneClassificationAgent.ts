@@ -20,14 +20,27 @@ export class SceneClassificationAgent {
         messages: [
           {
             role: "system",
-            content: "You are a scene analysis system. Analyze the image and classify the scene, considering detected objects and overall composition."
+            content: `You are a scene analysis system. Analyze the image and return a JSON object with the following structure:
+{
+  "scene": "string (scene description)",
+  "confidence": number (between 0 and 1),
+  "attributes": {
+    "lighting": "string",
+    "composition": "string",
+    "mood": "string",
+    "setting": "string",
+    "cameraAngle": "string",
+    "visualQuality": "string"
+  }
+}
+Return ONLY valid JSON, no other text or explanations.`
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Analyze this image for scene classification. Consider these detected objects: ${JSON.stringify(objectDetection.objects)}`
+                text: `Analyze this image and classify the scene. Consider these detected objects: ${JSON.stringify(objectDetection.objects)}`
               },
               {
                 type: "image_url",
@@ -37,6 +50,7 @@ export class SceneClassificationAgent {
           }
         ],
         max_tokens: 1000,
+        response_format: { type: "json_object" }
       });
 
       const content = response.choices[0]?.message?.content;
@@ -44,7 +58,21 @@ export class SceneClassificationAgent {
         throw new Error("No analysis received from OpenAI API");
       }
 
-      const parsedScene = JSON.parse(content);
+      // Log raw response for debugging
+      console.log('Raw GPT-4 response:', {
+        content: content.substring(0, 200) + '...',
+        length: content.length,
+        type: typeof content
+      });
+
+      let parsedScene;
+      try {
+        parsedScene = JSON.parse(content);
+      } catch (error) {
+        console.error('JSON Parse Error:', error);
+        console.error('Raw content causing parse error:', content);
+        throw new Error(`Failed to parse scene classification response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
       
       return {
         frameNumber,

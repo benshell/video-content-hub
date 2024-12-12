@@ -1,0 +1,34 @@
+Error in scene classification: SyntaxError: Unexpected token 'T', "This image"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at SceneClassificationAgent.analyze (/home/runner/video-content-hub/server/services/frameAnalysis/agents/sceneClassificationAgent.ts:47:32)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:62:35)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:601:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+
+Error analyzing frame 0: SyntaxError: Unexpected token 'T', "This image"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at SceneClassificationAgent.analyze (/home/runner/video-content-hub/server/services/frameAnalysis/agents/sceneClassificationAgent.ts:47:32)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:62:35)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:601:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+
+Error analyzing frame 0: {
+  error: 'Unexpected token \'T\', "This image"... is not valid JSON',
+  bufferSize: 52725,
+  timestamp: 1,
+  videoId: 34,
+  stage: 'frame_optimization'
+}
+
+Error processing frame at 1: SyntaxError: Unexpected token 'T', "This image"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at SceneClassificationAgent.analyze (/home/runner/video-content-hub/server/services/frameAnalysis/agents/sceneClassificationAgent.ts:47:32)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:62:35)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:601:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
