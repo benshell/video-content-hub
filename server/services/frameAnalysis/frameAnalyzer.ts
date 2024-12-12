@@ -83,8 +83,8 @@ export class FrameAnalyzer {
         events
       );
 
-      // Generate tags from all analyses
-      const tags = [
+      // Generate frame analysis tags from all analyses
+      const frameAnalysisTags = [
         ...objectDetection.objects.map(obj => ({
           name: obj.class,
           category: obj.class.toLowerCase().includes('person') ? 'person' : 'object',
@@ -114,7 +114,7 @@ export class FrameAnalyzer {
         sceneClassification,
         events,
         narrative,
-        tags,
+        tags: frameAnalysisTags,
         metadata: {
           semanticDescription: {
             summary: narrative.summary,
@@ -163,20 +163,19 @@ export class FrameAnalyzer {
         });
 
         // Create tags from all sources
-        const tagsToCreate = analysis.tags.map(tag => ({
+        const tagsToCreate = analysis.tags?.map(tag => ({
           videoId,
           name: tag.name,
           category: tag.category,
           timestamp: analysis.timestamp,
           confidence: Math.round(tag.confidence),
           aiGenerated: 1,
-        }));
+        })) || [];
 
-        // Batch insert all tags
-        const insertedTags = await tx
-          .insert(tags)
-          .values(tagsToCreate)
-          .returning();
+        // Batch insert all tags using the tags table from schema
+        const insertedTags = tagsToCreate.length > 0 
+          ? await tx.insert(tags).values(tagsToCreate).returning()
+          : [];
 
         console.log('Created tags:', {
           count: insertedTags.length,
