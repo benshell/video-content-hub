@@ -32,8 +32,10 @@ export class NarrativeAgent {
                 text: "Analyze this image for narrative context:"
               },
               {
-                type: "text",
-                text: `data:image/jpeg;base64,${frameBase64}`
+                type: "image",
+                image_url: {
+                  url: `data:image/jpeg;base64,${frameBase64}`
+                }
               },
               {
                 type: "text",

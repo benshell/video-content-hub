@@ -25,8 +25,10 @@ export class ObjectDetectionAgent {
                 text: "Analyze this image for object detection:"
               },
               {
-                type: "text",
-                text: `data:image/jpeg;base64,${frameBase64}`
+                type: "image",
+                image_url: {
+                  url: `data:image/jpeg;base64,${frameBase64}`
+                }
               },
               {
                 type: "text",
