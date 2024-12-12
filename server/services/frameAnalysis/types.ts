@@ -29,6 +29,8 @@ export interface SceneClassification {
     composition: string;
     mood: string;
     setting: string;
+    cameraAngle: string;
+    visualQuality: string;
   };
 }
 

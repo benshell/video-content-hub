@@ -26,10 +26,12 @@ export class SceneClassificationAgent {
             role: "user",
             content: [
               {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
+                type: "text",
+                text: "Analyze this image for scene classification:"
+              },
+              {
+                type: "text",
+                text: `data:image/jpeg;base64,${frameBase64}`
               },
               {
                 type: "text",
