@@ -19,7 +19,9 @@ export const videos = pgTable("videos", {
 
 export const frameAnalysis = pgTable("frame_analysis", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").notNull().references(() => videos.id),
+  videoId: integer("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: 'cascade' }),
   frameNumber: integer("frame_number").notNull(),
   timestamp: integer("timestamp").notNull(),
   objects: jsonb("objects").$type<{
@@ -80,7 +82,9 @@ export const frameAnalysis = pgTable("frame_analysis", {
 
 export const videoAnalysisSummary = pgTable("video_analysis_summary", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").notNull().references(() => videos.id),
+  videoId: integer("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: 'cascade' }),
   totalFramesAnalyzed: integer("total_frames_analyzed").notNull(),
   dominantScenes: jsonb("dominant_scenes").$type<Array<{
     scene: string;
@@ -104,16 +108,11 @@ export const videoAnalysisSummary = pgTable("video_analysis_summary", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const videosRelations = relations(videos, ({ many }) => ({
-  tags: many(tags),
-  keyframes: many(keyframes),
-  frameAnalyses: many(frameAnalysis),
-  analysisSummary: many(videoAnalysisSummary),
-}));
-
 export const tags = pgTable("tags", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").notNull().references(() => videos.id),
+  videoId: integer("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   category: text("category").notNull(),
   timestamp: integer("timestamp").notNull(),
@@ -121,16 +120,11 @@ export const tags = pgTable("tags", {
   aiGenerated: integer("ai_generated").default(0),
 });
 
-export const tagsRelations = relations(tags, ({ one }) => ({
-  video: one(videos, {
-    fields: [tags.videoId],
-    references: [videos.id],
-  }),
-}));
-
 export const keyframes = pgTable("keyframes", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  videoId: integer("video_id").notNull().references(() => videos.id),
+  videoId: integer("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: 'cascade' }),
   timestamp: integer("timestamp").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   metadata: jsonb("metadata").$type<{
@@ -157,6 +151,21 @@ export const keyframes = pgTable("keyframes", {
     };
   } | null>()
 });
+
+// Relations
+export const videosRelations = relations(videos, ({ many }) => ({
+  tags: many(tags),
+  keyframes: many(keyframes),
+  frameAnalyses: many(frameAnalysis),
+  analysisSummary: many(videoAnalysisSummary),
+}));
+
+export const tagsRelations = relations(tags, ({ one }) => ({
+  video: one(videos, {
+    fields: [tags.videoId],
+    references: [videos.id],
+  }),
+}));
 
 export const keyframesRelations = relations(keyframes, ({ one }) => ({
   video: one(videos, {
