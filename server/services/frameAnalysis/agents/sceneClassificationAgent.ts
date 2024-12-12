@@ -16,7 +16,7 @@ export class SceneClassificationAgent {
   ): Promise<SceneClassification> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4-vision-preview",
+        model: "gpt-4-vision-beta",
         messages: [
           {
             role: "system",
