@@ -227,20 +227,25 @@ export async function processVideo(videoId: number, videoPath: string) {
 
           console.log(`Saved keyframe at ${frame.timestamp} with metadata:`, analysis.metadata);
 
-          // Create tags from analysis
-          const tagPromises = analysis.tags.map(tag =>
-            db.insert(tags).values({
-              videoId,
-              name: tag.name,
-              category: tag.category,
-              timestamp: frame.timestamp,
-              confidence: tag.confidence,
-              aiGenerated: 1
-            })
-          );
+          // Create tags from analysis if available
+          if (analysis.tags && analysis.tags.length > 0) {
+            const tagPromises = analysis.tags.map(tag =>
+              db.insert(tags).values({
+                videoId,
+                name: tag.name,
+                category: tag.category,
+                timestamp: frame.timestamp,
+                confidence: Math.round(tag.confidence),
+                aiGenerated: 1
+              })
+            );
 
-          const insertedTags = await Promise.all(tagPromises);
-          totalTags += insertedTags.length;
+            const insertedTags = await Promise.all(tagPromises);
+            totalTags += insertedTags.length;
+            console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
+          } else {
+            console.log(`No tags generated for frame at ${frame.timestamp}`);
+          }
 
           console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
           processedFrames++;

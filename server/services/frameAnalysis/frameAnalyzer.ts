@@ -85,6 +85,34 @@ export class FrameAnalyzer {
         events
       );
 
+      // Generate tags from all analyses
+      const tags = [
+        // Object detection tags
+        ...objectDetection.objects.map(obj => ({
+          name: obj.class,
+          category: obj.class.toLowerCase().includes('person') ? 'person' : 'object',
+          confidence: obj.confidence * 100,
+        })),
+        // Scene classification tags
+        {
+          name: sceneClassification.scene,
+          category: 'scene',
+          confidence: sceneClassification.confidence * 100,
+        },
+        // Event tags
+        ...events.map(event => ({
+          name: event.eventType,
+          category: 'event',
+          confidence: event.confidence * 100,
+        })),
+        // Narrative-based tags
+        ...narrative.keyElements.map(element => ({
+          name: element,
+          category: 'narrative',
+          confidence: 90, // High confidence for narrative elements
+        }))
+      ];
+
       // Combine all analyses
       const analysis: FrameAnalysis = {
         frameNumber,
@@ -93,6 +121,7 @@ export class FrameAnalyzer {
         sceneClassification,
         events,
         narrative,
+        tags,
       };
 
       // Save to database

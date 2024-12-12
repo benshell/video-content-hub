@@ -64,6 +64,11 @@ export interface FrameAnalysis {
   sceneClassification: SceneClassification;
   events: TemporalEvent[];
   narrative: NarrativeContext;
+  tags?: Array<{
+    name: string;
+    category: string;
+    confidence: number;
+  }>;
   metadata?: {
     semanticDescription: {
       summary: string;
