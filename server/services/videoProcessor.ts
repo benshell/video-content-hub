@@ -529,144 +529,15 @@ interface AnalyzedFrame {
   };
 }
 
-async function analyzeFrame(base64Image: string): Promise<AnalyzedFrame> {
+import { FrameAnalyzer } from "./frameAnalysis/frameAnalyzer";
+
+const frameAnalyzer = new FrameAnalyzer(openai);
+
+async function analyzeFrame(buffer: Buffer, frameNumber: number, timestamp: number, videoId: number) {
   try {
-    console.log("Starting frame analysis with GPT-4 Vision...");
-    
-    // Verify OpenAI API key is set
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OpenAI API key is not configured");
-    }
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
-      messages: [
-        {
-          role: "system",
-          content: "You are a video frame analysis assistant. Always respond with valid JSON format following the specified schema. Be precise and detailed in your analysis."
-        },
-        {
-          role: "user",
-          content: [
-            { 
-              type: "text", 
-              text: `Analyze this video frame and format your response as valid JSON with this exact structure:
-{
-  "tags": [
-    {"name": "string", "category": "person|object|action|scene", "confidence": number}
-  ],
-  "semanticDescription": {
-    "summary": "string",
-    "keyElements": ["string"],
-    "mood": "string",
-    "composition": "string"
-  },
-  "objects": {
-    "people": ["string"],
-    "items": ["string"],
-    "environment": ["string"]
-  },
-  "actions": {
-    "primary": "string",
-    "secondary": ["string"],
-    "movements": ["string"]
-  },
-  "technical": {
-    "lighting": "string",
-    "cameraAngle": "string",
-    "visualQuality": "string"
-  }
-}`
-            },
-            {
-              type: "text", 
-              text: "Provide rich, contextual analysis that captures both technical and semantic aspects. Focus on specific details and relationships between elements. Your response must be valid JSON."
-            },
-            {
-              type: "image",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1500,
-      temperature: 0.3
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      console.error("Empty or invalid response from OpenAI:", response);
-      throw new Error("No analysis received from OpenAI API");
-    }
-
-    console.log("Received GPT-4 Vision response");
-    
-    let analysis;
-    try {
-      // Try to extract JSON from the response if it's wrapped in text
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : content;
-      analysis = JSON.parse(jsonString);
-
-      // Validate required structure
-      if (!analysis.tags || !analysis.semanticDescription || !analysis.objects || 
-          !analysis.actions || !analysis.technical) {
-        throw new Error("Response missing required fields");
-      }
-    } catch (parseError) {
-      console.error("Failed to parse OpenAI response:", {
-        error: parseError,
-        content: content.substring(0, 500) + "..." // Log first 500 chars
-      });
-      throw new Error(`Invalid JSON response: ${parseError.message}`);
-    }
-    
-    // Validate and transform the analysis
-    const transformedTags = (analysis.tags || []).map((tag: any) => {
-      const validCategories = ['person', 'object', 'action', 'scene'];
-      return {
-        name: String(tag.name || "").toLowerCase(),
-        category: validCategories.includes(String(tag.category)) ? String(tag.category) : 'object',
-        confidence: Math.min(Math.max(Number(tag.confidence) || 90, 0), 100), // Ensure confidence is between 0-100
-      };
-    });
-
-    const result = {
-      tags: transformedTags,
-      metadata: {
-        semanticDescription: {
-          summary: String(analysis.semanticDescription?.summary || ""),
-          keyElements: Array.isArray(analysis.semanticDescription?.keyElements) 
-            ? analysis.semanticDescription.keyElements.map(String) 
-            : [],
-          mood: String(analysis.semanticDescription?.mood || ""),
-          composition: String(analysis.semanticDescription?.composition || "")
-        },
-        objects: {
-          people: Array.isArray(analysis.objects?.people) ? analysis.objects.people.map(String) : [],
-          items: Array.isArray(analysis.objects?.items) ? analysis.objects.items.map(String) : [],
-          environment: Array.isArray(analysis.objects?.environment) ? analysis.objects.environment.map(String) : []
-        },
-        actions: {
-          primary: String(analysis.actions?.primary || ""),
-          secondary: Array.isArray(analysis.actions?.secondary) ? analysis.actions.secondary.map(String) : [],
-          movements: Array.isArray(analysis.actions?.movements) ? analysis.actions.movements.map(String) : []
-        },
-        technical: {
-          lighting: String(analysis.technical?.lighting || ""),
-          cameraAngle: String(analysis.technical?.cameraAngle || ""),
-          visualQuality: String(analysis.technical?.visualQuality || "")
-        }
-      },
-    };
-
-    console.log("Processed analysis result:", result);
-    return result;
-
+    return await frameAnalyzer.analyzeFrame(buffer, frameNumber, timestamp, videoId);
   } catch (error) {
     console.error("Error in frame analysis:", error);
-    throw error; // Let the caller handle the error
+    throw error;
   }
 }
