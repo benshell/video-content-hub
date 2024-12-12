@@ -22,7 +22,17 @@ export class NarrativeAgent {
         messages: [
           {
             role: "system",
-            content: "You are a narrative analysis system. Create a human-readable summary of the scene incorporating object detection, scene classification, and temporal events."
+            content: `You are a narrative analysis system. Analyze the scene and return a JSON object with the following structure:
+{
+  "summary": "string (human-readable scene summary)",
+  "keyElements": ["string array of key elements"],
+  "actions": {
+    "primary": "string (main action)",
+    "secondary": ["string array of secondary actions"]
+  },
+  "context": "string (overall scene context)"
+}
+Return ONLY valid JSON, no other text or explanations.`
           },
           {
             role: "user",
@@ -42,6 +52,7 @@ export class NarrativeAgent {
           }
         ],
         max_tokens: 1000,
+        response_format: { type: "json_object" }
       });
 
       const content = response.choices[0]?.message?.content;
@@ -49,7 +60,21 @@ export class NarrativeAgent {
         throw new Error("No analysis received from OpenAI API");
       }
 
-      const narrative = JSON.parse(content);
+      // Log raw response for debugging
+      console.log('Raw GPT-4 response:', {
+        content: content.substring(0, 200) + '...',
+        length: content.length,
+        type: typeof content
+      });
+
+      let narrative;
+      try {
+        narrative = JSON.parse(content);
+      } catch (error) {
+        console.error('JSON Parse Error:', error);
+        console.error('Raw content causing parse error:', content);
+        throw new Error(`Failed to parse narrative response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
       
       return {
         frameNumber,

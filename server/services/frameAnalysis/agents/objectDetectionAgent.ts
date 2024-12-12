@@ -62,10 +62,10 @@ Return ONLY valid JSON, no other text or explanations.`
       let parsedObjects;
       try {
         parsedObjects = JSON.parse(content);
-      } catch (parseError) {
-        console.error('JSON Parse Error:', parseError);
+      } catch (error) {
+        console.error('JSON Parse Error:', error);
         console.error('Raw content causing parse error:', content);
-        throw new Error(`Failed to parse GPT-4 response: ${parseError.message}`);
+        throw new Error(`Failed to parse object detection response: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
 
       // Validate response structure
