@@ -16,7 +16,7 @@ export class SceneClassificationAgent {
   ): Promise<SceneClassification> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4-vision-beta",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -30,8 +30,10 @@ export class SceneClassificationAgent {
                 text: `Analyze this image for scene classification. Consider these detected objects: ${JSON.stringify(objectDetection.objects)}`
               },
               {
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
+                type: "image",
+                image_url: {
+                  url: `data:image/jpeg;base64,${frameBase64}`
+                }
               }
             ]
           }

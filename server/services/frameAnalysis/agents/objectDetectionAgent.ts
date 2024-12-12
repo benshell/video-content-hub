@@ -11,7 +11,7 @@ export class ObjectDetectionAgent {
   async analyze(frameBase64: string, frameNumber: number, timestamp: number): Promise<ObjectDetectionResult> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4-vision-beta",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -25,8 +25,10 @@ export class ObjectDetectionAgent {
                 text: "Analyze this image for object detection. Return results in a structured format with bounding boxes and confidence scores."
               },
               {
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
+                type: "image",
+                image_url: {
+                  url: `data:image/jpeg;base64,${frameBase64}`
+                }
               }
             ]
           }

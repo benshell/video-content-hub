@@ -18,7 +18,7 @@ export class NarrativeAgent {
   ): Promise<NarrativeContext> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4-vision-beta",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -35,8 +35,10 @@ export class NarrativeAgent {
                 Events: ${JSON.stringify(events)}`
               },
               {
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
+                type: "image",
+                image_url: {
+                  url: `data:image/jpeg;base64,${frameBase64}`
+                }
               }
             ]
           }
