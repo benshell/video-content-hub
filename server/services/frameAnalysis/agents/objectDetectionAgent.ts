@@ -25,10 +25,8 @@ export class ObjectDetectionAgent {
                 text: "Analyze this image for object detection. Return results in a structured format with bounding boxes and confidence scores."
               },
               {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }
@@ -41,7 +39,6 @@ export class ObjectDetectionAgent {
         throw new Error("No analysis received from OpenAI API");
       }
 
-      // Parse the response and convert to ObjectDetectionResult format
       const parsedObjects = JSON.parse(content);
       
       return {

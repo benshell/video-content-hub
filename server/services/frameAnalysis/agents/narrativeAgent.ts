@@ -35,10 +35,8 @@ export class NarrativeAgent {
                 Events: ${JSON.stringify(events)}`
               },
               {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }

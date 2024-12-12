@@ -30,10 +30,8 @@ export class SceneClassificationAgent {
                 text: `Analyze this image for scene classification. Consider these detected objects: ${JSON.stringify(objectDetection.objects)}`
               },
               {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }
