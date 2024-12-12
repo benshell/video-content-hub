@@ -31,7 +31,7 @@ export class SceneClassificationAgent {
               },
               {
                 type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
+                image_url: { url: frameBase64.replace(/^data:image\/[a-z]+;base64,/, '') }
               }
             ]
           }

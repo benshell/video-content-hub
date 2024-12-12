@@ -1,0 +1,91 @@
+Error analyzing frame 0: BadRequestError: 400 You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif', 'webp'].
+
+                           at Function.generate (/home/runner/video-content-hub/node_modules/openai/src/error.ts:70:14)
+                           at
+                           OpenAI.makeStatusError (/home/runner/video-content-hub/node_modules/openai/src/core.ts:435:21)
+
+                           OpenAI.makeRequest (/home/runner/video-content-hub/node_modules/openai/src/core.ts:499:24)
+                           at process.processTicksAndRejections (node: internal/process/task_queues:95:5)
+                           at
+                           at
+
+nt.ts:18:24                                                                                                                                                                                                                                                                                                                                                                                                                      SceneClassificationAgent.analyze (/home/runner/video-content-hub/server/services/frameAnalysis/agents/sceneClassificationAge
+
+                           at                    FrameAnalyzer.analyzeFrame
+                           at analyzeFrame(/home/runner/video-content-hub/server/services/videoProcessor.ts:601:12
+                                                 (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:62:35)
+
+                           at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+                           at async Promise.all (index 0)
+
+                           at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7) {
+                           status: 400,
+
+                           headers: {
+                           access-control-expose-headers': 'X-Request-ID',
+
+                           'alt-svc': 'h3=":443"; ma=86400',
+                           'cf-cache-status': 'DYNAMIC
+
+                           'cf-ray': '8f@bd26a4b0abd5b-ATL',
+                           connection: 'keep-alive',
+
+                           content-length': '258',
+                           'content-type': 'application/json',
+                           date: Thu, 12 Dec 2024 06:57:44 GMT',
+
+                           openai-processing-ms': '32',                                                                                                           openai-organization': 'arsa-6rkk91',
+
+'set-cookie':              'openat-version': '2020-10-01',
+                           server: 'cloudflare
+_cf_bm=m4Pq.8ka3e3Xq0WB9a@aw86z54GKzXoncgVLXM7jV1E-1733986664-1.0.1.1-FuW4rZl.WBsTkIPzdouHvxgk_1Ecunq5jWkA0GFhV
+RcNo6mpsr2_1XTM_BKZynY100xLzYtvN.WXUKJ2AZUQQ; path=/; expires=Thu, 12-Dec-24 07:27:44 GMT; domain=.api.openai.com; HttpOnly; Secur
+e; SameSite=None, _cfuvid=V3ooL9vufSC6Jln1_Rapu_G_uipmaex5mQhLMg220m8-1733966664147-0.0.1.1-604800000; path=/; domain=.api.openai.c
+
+om; HttpOnly; Secure; SameSite-None',
+'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+
+                           *x-content-type-options': 'nosnuff',
+                           'x-ratelimit-limit-input-images': '50000',
+
+                           'x-ratelimit-limit-requests': '5000',
+                           'x-ratelimit-limit-tokens': '800000',
+
+                           'x-ratelimit-remaining-input-images': '49999',
+                           'x-ratelimit-remaining-requests': '4999,
+
+                           'x-ratelimit-remaining-tokens": "798160
+                           'x-ratelimit-reset-input-images': '1ms
+
+                           'x-ratelimit-reset-requests': '12ms',
+                           'x-ratelimit-reset-tokens': '138ms',
+
+                           'x-request-id': 'req_18b1d943453ae41febbbe3cd9c9e740d'
+                           },
+
+                           request_id: Freq_18b1d943453ae41febbbe3cd9c9e74@d',
+                           error: {
+
+                           message: "You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif
+                           'webp'].",
+
+                           type: 'invalid_request_error',
+                           param: null,
+
+                           code: 'invalid_image_format
+                           },
+
+                           code: invalid_image_format,
+                           param: null,
+
+}                          type: 'invalid_request_error'
+Error analyzing frame : {
+
+                           error: "400 You uploaded an unsupported image. Please make sure your image has of one the following formats: ['png', 'jpeg', 'gif
+                           'webp'].",
+
+                           bufferSize: 50644,
+                           timestamp:,
+
+                           videoId: 32,
+                           stage: 'frame_optimization'
