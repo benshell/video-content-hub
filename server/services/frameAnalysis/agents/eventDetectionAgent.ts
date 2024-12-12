@@ -44,7 +44,18 @@ export class EventDetectionAgent {
         messages: [
           {
             role: "system",
-            content: "You are an event detection system. Analyze the sequence of frames to identify temporal events and patterns."
+            content: `You are an event detection system. Analyze the sequence of frames and return a JSON array of events with this structure:
+[{
+  "startFrame": number,
+  "endFrame": number,
+  "startTime": number,
+  "endTime": number,
+  "eventType": string,
+  "confidence": number,
+  "description": string,
+  "involvedObjects": string[]
+}]
+Return ONLY valid JSON, no other text or explanations.`
           },
           {
             role: "user",
@@ -52,6 +63,7 @@ export class EventDetectionAgent {
           }
         ],
         max_tokens: 1000,
+        response_format: { type: "json_object" }
       });
 
       const content = response.choices[0]?.message?.content;
@@ -59,8 +71,24 @@ export class EventDetectionAgent {
         throw new Error("No analysis received from OpenAI API");
       }
 
-      const events = JSON.parse(content);
-      return events.map((event: any) => ({
+      console.log('Raw event detection response:', {
+        content: content.substring(0, 200) + '...',
+        length: content.length,
+      });
+
+      let parsedEvents;
+      try {
+        parsedEvents = JSON.parse(content);
+        if (!Array.isArray(parsedEvents.events)) {
+          throw new Error('Invalid events array in response');
+        }
+      } catch (error) {
+        console.error('JSON Parse Error:', error);
+        console.error('Raw content causing parse error:', content);
+        return [];
+      }
+
+      return parsedEvents.events.map((event: any) => ({
         startFrame: event.startFrame,
         endFrame: event.endFrame,
         startTime: event.startTime,

@@ -228,6 +228,7 @@ export async function processVideo(videoId: number, videoPath: string) {
           console.log(`Saved keyframe at ${frame.timestamp} with metadata:`, analysis.metadata);
 
           // Create tags from analysis if available
+          let frameTagCount = 0;
           if (analysis.tags && analysis.tags.length > 0) {
             const tagPromises = analysis.tags.map(tag =>
               db.insert(tags).values({
@@ -241,13 +242,12 @@ export async function processVideo(videoId: number, videoPath: string) {
             );
 
             const insertedTags = await Promise.all(tagPromises);
-            totalTags += insertedTags.length;
-            console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
+            frameTagCount = insertedTags.length;
+            totalTags += frameTagCount;
+            console.log(`Added ${frameTagCount} tags for frame at ${frame.timestamp}`);
           } else {
             console.log(`No tags generated for frame at ${frame.timestamp}`);
           }
-
-          console.log(`Added ${insertedTags.length} tags for frame at ${frame.timestamp}`);
           processedFrames++;
           
           // Update progress in database

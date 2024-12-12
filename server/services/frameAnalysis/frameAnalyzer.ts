@@ -26,7 +26,6 @@ export class FrameAnalyzer {
     try {
       console.log(`Processing frame ${frameNumber} at timestamp ${timestamp}`);
       
-      // Basic validation of the buffer
       if (!Buffer.isBuffer(frameBuffer)) {
         throw new Error('Invalid buffer provided');
       }
@@ -35,7 +34,6 @@ export class FrameAnalyzer {
         throw new Error('Empty buffer provided');
       }
       
-      // Validate and convert buffer to base64 with proper MIME type
       const base64Image = Buffer.isBuffer(frameBuffer) 
         ? `data:image/jpeg;base64,${frameBuffer.toString('base64')}`
         : null;
@@ -48,7 +46,7 @@ export class FrameAnalyzer {
         size: frameBuffer.length,
         base64Length: base64Image.length,
         startsWithDataUrl: base64Image.startsWith('data:image/jpeg;base64,'),
-        sampleStart: base64Image.substring(0, 50) + '...' // Log start of string for debugging
+        sampleStart: base64Image.substring(0, 50) + '...'
       });
 
       // Step 1: Object Detection
@@ -87,33 +85,28 @@ export class FrameAnalyzer {
 
       // Generate tags from all analyses
       const tags = [
-        // Object detection tags
         ...objectDetection.objects.map(obj => ({
           name: obj.class,
           category: obj.class.toLowerCase().includes('person') ? 'person' : 'object',
           confidence: obj.confidence * 100,
         })),
-        // Scene classification tags
         {
           name: sceneClassification.scene,
           category: 'scene',
           confidence: sceneClassification.confidence * 100,
         },
-        // Event tags
         ...events.map(event => ({
           name: event.eventType,
           category: 'event',
           confidence: event.confidence * 100,
         })),
-        // Narrative-based tags
         ...narrative.keyElements.map(element => ({
           name: element,
           category: 'narrative',
-          confidence: 90, // High confidence for narrative elements
+          confidence: 90,
         }))
       ];
 
-      // Combine all analyses
       const analysis: FrameAnalysis = {
         frameNumber,
         timestamp,
@@ -122,10 +115,76 @@ export class FrameAnalyzer {
         events,
         narrative,
         tags,
+        metadata: {
+          semanticDescription: {
+            summary: narrative.summary,
+            keyElements: narrative.keyElements,
+            mood: sceneClassification.attributes.mood,
+            composition: sceneClassification.attributes.composition,
+          },
+          objects: {
+            people: objectDetection.objects
+              .filter(obj => obj.class.toLowerCase().includes('person'))
+              .map(obj => obj.class),
+            items: objectDetection.objects
+              .filter(obj => !obj.class.toLowerCase().includes('person'))
+              .map(obj => obj.class),
+            environment: [sceneClassification.scene],
+          },
+          actions: {
+            primary: narrative.actions.primary,
+            secondary: narrative.actions.secondary,
+            movements: events.map(event => event.description),
+          },
+          technical: {
+            lighting: sceneClassification.attributes.lighting,
+            cameraAngle: sceneClassification.attributes.cameraAngle || "auto-detected",
+            visualQuality: sceneClassification.attributes.visualQuality || "high",
+          },
+        }
       };
 
-      // Save to database
-      await this.saveAnalysis(analysis, videoId);
+      // Save results to database within a transaction
+      const result = await db.transaction(async (tx) => {
+        // Save keyframe with metadata
+        const [keyframe] = await tx
+          .insert(keyframes)
+          .values({
+            videoId,
+            timestamp: analysis.timestamp,
+            metadata: analysis.metadata,
+          })
+          .returning();
+
+        console.log('Saved keyframe:', {
+          id: keyframe.id,
+          timestamp: keyframe.timestamp,
+          metadata: analysis.metadata,
+        });
+
+        // Create tags from all sources
+        const tagsToCreate = analysis.tags.map(tag => ({
+          videoId,
+          name: tag.name,
+          category: tag.category,
+          timestamp: analysis.timestamp,
+          confidence: Math.round(tag.confidence),
+          aiGenerated: 1,
+        }));
+
+        // Batch insert all tags
+        const insertedTags = await tx
+          .insert(tags)
+          .values(tagsToCreate)
+          .returning();
+
+        console.log('Created tags:', {
+          count: insertedTags.length,
+          categories: Array.from(new Set(insertedTags.map(tag => tag.category))),
+        });
+
+        return { keyframe, tags: insertedTags };
+      });
 
       return analysis;
     } catch (error) {
@@ -134,113 +193,9 @@ export class FrameAnalyzer {
     }
   }
 
-  private async saveAnalysis(analysis: FrameAnalysis, videoId: number) {
-    try {
-      // Build metadata from analysis
-      const metadata = {
-        semanticDescription: {
-          summary: analysis.narrative.summary,
-          keyElements: analysis.narrative.keyElements,
-          mood: analysis.sceneClassification.attributes.mood,
-          composition: analysis.sceneClassification.attributes.composition,
-        },
-        objects: {
-          people: analysis.objectDetection.objects
-            .filter(obj => obj.class.toLowerCase().includes('person'))
-            .map(obj => obj.class),
-          items: analysis.objectDetection.objects
-            .filter(obj => !obj.class.toLowerCase().includes('person'))
-            .map(obj => obj.class),
-          environment: [analysis.sceneClassification.scene],
-        },
-        actions: {
-          primary: analysis.narrative.actions.primary,
-          secondary: analysis.narrative.actions.secondary,
-          movements: analysis.events.map(event => event.description),
-        },
-        technical: {
-          lighting: analysis.sceneClassification.attributes.lighting,
-          cameraAngle: analysis.sceneClassification.attributes.cameraAngle || "auto-detected",
-          visualQuality: analysis.sceneClassification.attributes.visualQuality || "high",
-        },
-      };
-
-      // Set metadata in analysis
-      analysis.metadata = metadata;
-
-      // Save keyframe with metadata
-      const [keyframe] = await db.insert(keyframes).values({
-        videoId,
-        timestamp: analysis.timestamp,
-        metadata: metadata,
-      }).returning();
-
-      console.log('Saved keyframe with metadata:', {
-        id: keyframe.id,
-        timestamp: keyframe.timestamp,
-        metadata: metadata,
-      });
-
-      // Create tags from all sources
-      const tagsToCreate = [
-        // Object detection tags
-        ...analysis.objectDetection.objects.map(obj => ({
-          videoId,
-          name: obj.class,
-          category: obj.class.toLowerCase().includes('person') ? 'person' : 'object',
-          timestamp: analysis.timestamp,
-          confidence: Math.round(obj.confidence * 100),
-          aiGenerated: 1,
-        })),
-        // Scene classification tags
-        {
-          videoId,
-          name: analysis.sceneClassification.scene,
-          category: 'scene',
-          timestamp: analysis.timestamp,
-          confidence: Math.round(analysis.sceneClassification.confidence * 100),
-          aiGenerated: 1,
-        },
-        // Event tags
-        ...analysis.events.map(event => ({
-          videoId,
-          name: event.eventType,
-          category: 'event',
-          timestamp: event.startTime,
-          confidence: Math.round(event.confidence * 100),
-          aiGenerated: 1,
-        })),
-        // Narrative-based tags
-        ...analysis.narrative.keyElements.map(element => ({
-          videoId,
-          name: element,
-          category: 'narrative',
-          timestamp: analysis.timestamp,
-          confidence: 90, // High confidence for narrative elements
-          aiGenerated: 1,
-        })),
-      ];
-
-      // Batch insert all tags
-      const insertedTags = await db.insert(tags)
-        .values(tagsToCreate)
-        .returning();
-
-      console.log('Created tags:', {
-        count: insertedTags.length,
-        categories: Array.from(new Set(insertedTags.map(tag => tag.category))),
-      });
-
-      return { keyframe, tags: insertedTags };
-    } catch (error) {
-      console.error("Error saving frame analysis:", error);
-      throw error;
-    }
-  }
-
   async analyzeBatch(frames: Array<{ buffer: Buffer; frameNumber: number; timestamp: number }>, videoId: number) {
     const results = [];
-    const batchSize = 5; // Process 5 frames at a time
+    const batchSize = 5;
 
     for (let i = 0; i < frames.length; i += batchSize) {
       const batch = frames.slice(i, i + batchSize);
