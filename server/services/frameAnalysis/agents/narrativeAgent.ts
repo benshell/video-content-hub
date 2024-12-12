@@ -18,7 +18,7 @@ export class NarrativeAgent {
   ): Promise<NarrativeContext> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o-2024-08-06",
         messages: [
           {
             role: "system",

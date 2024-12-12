@@ -11,7 +11,7 @@ export class ObjectDetectionAgent {
   async analyze(frameBase64: string, frameNumber: number, timestamp: number): Promise<ObjectDetectionResult> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o-2024-08-06",
         messages: [
           {
             role: "system",
@@ -26,7 +26,9 @@ export class ObjectDetectionAgent {
               },
               {
                 type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
+                image_url: { 
+                  url: frameBase64 // frameBase64 already contains the full data URL
+                }
               }
             ]
           }

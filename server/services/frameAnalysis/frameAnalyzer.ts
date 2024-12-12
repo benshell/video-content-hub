@@ -35,8 +35,21 @@ export class FrameAnalyzer {
         throw new Error('Empty buffer provided');
       }
       
-      // Convert buffer directly to base64
-      const base64Image = frameBuffer.toString('base64');
+      // Validate and convert buffer to base64 with proper MIME type
+      const base64Image = Buffer.isBuffer(frameBuffer) 
+        ? `data:image/jpeg;base64,${frameBuffer.toString('base64')}`
+        : null;
+      
+      if (!base64Image || !base64Image.startsWith('data:image/jpeg;base64,')) {
+        throw new Error('Invalid image format or base64 conversion failed');
+      }
+
+      console.log('Base64 image validation:', {
+        size: frameBuffer.length,
+        base64Length: base64Image.length,
+        startsWithDataUrl: base64Image.startsWith('data:image/jpeg;base64,'),
+        sampleStart: base64Image.substring(0, 50) + '...' // Log start of string for debugging
+      });
 
       // Step 1: Object Detection
       const objectDetection = await this.objectDetectionAgent.analyze(
