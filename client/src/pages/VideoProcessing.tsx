@@ -162,12 +162,12 @@ export default function VideoProcessing() {
                                 <div className="text-sm space-y-4">
                                   <div className="bg-gray-50 p-4 rounded-lg">
                                     <h4 className="font-semibold text-base mb-2">Semantic Analysis</h4>
-                                    <p className="text-gray-700">{keyframe.metadata.semanticDescription?.summary}</p>
-                                    {keyframe.metadata.semanticDescription?.keyElements?.length > 0 && (
+                                    <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.summary}</p>
+                                    {keyframe.metadata?.semanticDescription?.keyElements?.length > 0 && (
                                       <div className="mt-2">
                                         <p className="font-medium text-gray-600">Key Elements</p>
                                         <div className="flex flex-wrap gap-1 mt-1">
-                                          {keyframe.metadata.semanticDescription.keyElements.map((element: string, i: number) => (
+                                          {keyframe.metadata?.semanticDescription?.keyElements?.map((element: string, i: number) => (
                                             <Badge key={i} variant="outline">{element}</Badge>
                                           ))}
                                         </div>
@@ -188,43 +188,31 @@ export default function VideoProcessing() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                       <h4 className="font-semibold text-base mb-2">Objects</h4>
-                                      {typeof keyframe.metadata === 'object' && 
-                                       keyframe.metadata !== null && 
-                                       'objects' in keyframe.metadata &&
-                                       Array.isArray((keyframe.metadata.objects as any)?.people) && 
-                                       (keyframe.metadata.objects as any).people.length > 0 && (
+                                      {keyframe.metadata?.objects?.people?.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">People</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {((keyframe.metadata.objects as any).people as string[]).map((person: string, i: number) => (
+                                            {keyframe.metadata.objects.people.map((person: string, i: number) => (
                                               <Badge key={i} variant="secondary">{person}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {typeof keyframe.metadata === 'object' && 
-                                       keyframe.metadata !== null && 
-                                       'objects' in keyframe.metadata &&
-                                       Array.isArray((keyframe.metadata.objects as any)?.items) && 
-                                       (keyframe.metadata.objects as any).items.length > 0 && (
+                                      {keyframe.metadata?.objects?.items?.length > 0 && (
                                         <div className="mb-3">
                                           <p className="font-medium text-gray-600">Items</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {((keyframe.metadata.objects as any).items as string[]).map((item: string, i: number) => (
+                                            {keyframe.metadata.objects.items.map((item: string, i: number) => (
                                               <Badge key={i} variant="secondary">{item}</Badge>
                                             ))}
                                           </div>
                                         </div>
                                       )}
-                                      {typeof keyframe.metadata === 'object' && 
-                                       keyframe.metadata !== null && 
-                                       'objects' in keyframe.metadata &&
-                                       Array.isArray((keyframe.metadata.objects as any)?.environment) && 
-                                       (keyframe.metadata.objects as any).environment.length > 0 && (
+                                      {keyframe.metadata?.objects?.environment?.length > 0 && (
                                         <div>
                                           <p className="font-medium text-gray-600">Environment</p>
                                           <div className="flex flex-wrap gap-1 mt-1">
-                                            {((keyframe.metadata.objects as any).environment as string[]).map((env: string, i: number) => (
+                                            {keyframe.metadata.objects.environment.map((env: string, i: number) => (
                                               <Badge key={i} variant="secondary">{env}</Badge>
                                             ))}
                                           </div>
