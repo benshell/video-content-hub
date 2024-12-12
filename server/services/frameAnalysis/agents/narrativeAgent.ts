@@ -36,7 +36,7 @@ export class NarrativeAgent {
               },
               {
                 type: "image_url",
-                image_url: { url: frameBase64.replace(/^data:image\/[a-z]+;base64,/, '') }
+                image_url: { url: frameBase64.startsWith('data:') ? frameBase64 : `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }
