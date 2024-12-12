@@ -535,9 +535,31 @@ const frameAnalyzer = new FrameAnalyzer(openai);
 
 async function analyzeFrame(buffer: Buffer, frameNumber: number, timestamp: number, videoId: number) {
   try {
+    console.log(`Starting analysis for frame ${frameNumber} (${buffer.length} bytes)`);
+    
+    // Validate buffer
+    if (!Buffer.isBuffer(buffer)) {
+      throw new Error('Invalid buffer provided');
+    }
+    
+    if (buffer.length === 0) {
+      throw new Error('Empty buffer provided');
+    }
+    
+    // Check if buffer contains image data (simple magic number check)
+    const signature = buffer.slice(0, 2).toString('hex');
+    if (!['ffd8', '8950', '424d'].includes(signature)) { // Check for JPEG, PNG, or BMP signatures
+      throw new Error(`Unsupported image format (signature: ${signature})`);
+    }
+    
     return await frameAnalyzer.analyzeFrame(buffer, frameNumber, timestamp, videoId);
   } catch (error) {
-    console.error("Error in frame analysis:", error);
+    console.error(`Error analyzing frame ${frameNumber}:`, {
+      error: error.message,
+      bufferSize: buffer?.length,
+      timestamp,
+      videoId
+    });
     throw error;
   }
 }

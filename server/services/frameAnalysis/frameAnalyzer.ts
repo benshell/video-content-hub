@@ -25,13 +25,38 @@ export class FrameAnalyzer {
 
   async analyzeFrame(frameBuffer: Buffer, frameNumber: number, timestamp: number, videoId: number): Promise<FrameAnalysis> {
     try {
-      // Compress and convert frame to base64
-      const resizedBuffer = await sharp(frameBuffer)
-        .resize(800, null, { fit: 'inside' })
-        .jpeg({ quality: 80 })
-        .toBuffer();
+      console.log(`Processing frame ${frameNumber} at timestamp ${timestamp}`);
       
-      const base64Image = resizedBuffer.toString('base64');
+      // Validate and process the image buffer
+      let processedBuffer: Buffer;
+      try {
+        // First try to load the image with Sharp to validate it
+        const image = sharp(frameBuffer);
+        const metadata = await image.metadata();
+        
+        if (!metadata.width || !metadata.height) {
+          throw new Error('Invalid image dimensions');
+        }
+        
+        console.log(`Frame ${frameNumber} metadata:`, {
+          format: metadata.format,
+          width: metadata.width,
+          height: metadata.height,
+          space: metadata.space
+        });
+        
+        // Process the image
+        processedBuffer = await image
+          .resize(800, null, { fit: 'inside' })
+          .jpeg({ quality: 80 })
+          .toBuffer();
+          
+      } catch (imageError) {
+        console.error(`Error processing frame ${frameNumber}:`, imageError);
+        throw new Error(`Image processing failed: ${imageError.message}`);
+      }
+      
+      const base64Image = processedBuffer.toString('base64');
 
       // Step 1: Object Detection
       const objectDetection = await this.objectDetectionAgent.analyze(
