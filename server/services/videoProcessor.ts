@@ -176,25 +176,54 @@ export async function processVideo(videoId: number, videoPath: string) {
         try {
           console.log(`Processing frame at timestamp: ${frame.timestamp}`);
           
-          // Compress and convert frame to base64
-          const buffer = await sharp(frame.path)
-            .resize(800, null, { fit: 'inside' })
-            .jpeg({ quality: 80 })
-            .toBuffer();
+          // Read the frame file directly
+          const buffer = await fs.readFile(frame.path);
           
-          const base64Image = buffer.toString('base64');
-          
-          // Analyze frame using GPT-4 Vision
-          const analysis = await analyzeFrame(base64Image);
+          // Process the frame with OpenAI Vision analysis
+          const analysis = await analyzeFrame(buffer, processedFrames, frame.timestamp, videoId);
           
           // Save keyframe with relative path
           const relativePath = frame.path.replace(process.cwd(), '');
+          const metadata = {
+            semanticDescription: {
+              summary: analysis.narrative.summary,
+              keyElements: analysis.narrative.keyElements,
+              mood: analysis.sceneClassification.attributes.mood,
+              composition: analysis.sceneClassification.attributes.composition,
+            },
+            objects: {
+              people: analysis.objectDetection.objects
+                .filter(obj => obj.class.toLowerCase().includes('person'))
+                .map(obj => obj.class),
+              items: analysis.objectDetection.objects
+                .filter(obj => !obj.class.toLowerCase().includes('person'))
+                .map(obj => obj.class),
+              environment: [analysis.sceneClassification.scene],
+            },
+            actions: {
+              primary: analysis.narrative.actions.primary,
+              secondary: analysis.narrative.actions.secondary,
+              movements: analysis.events.map(event => event.description),
+            },
+            technical: {
+              lighting: analysis.sceneClassification.attributes.lighting,
+              cameraAngle: analysis.sceneClassification.attributes.cameraAngle || "auto-detected",
+              visualQuality: analysis.sceneClassification.attributes.visualQuality || "high",
+            }
+          };
+          
           const [keyframe] = await db.insert(keyframes).values({
             videoId,
             timestamp: frame.timestamp,
             thumbnailUrl: relativePath,
-            metadata: analysis.metadata
+            metadata
           }).returning();
+
+          console.log('Saved keyframe:', {
+            id: keyframe.id,
+            timestamp: keyframe.timestamp,
+            metadata
+          });
 
           console.log(`Saved keyframe at ${frame.timestamp} with metadata:`, analysis.metadata);
 

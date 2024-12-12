@@ -64,6 +64,29 @@ export interface FrameAnalysis {
   sceneClassification: SceneClassification;
   events: TemporalEvent[];
   narrative: NarrativeContext;
+  metadata?: {
+    semanticDescription: {
+      summary: string;
+      keyElements: string[];
+      mood: string;
+      composition: string;
+    };
+    objects: {
+      people: string[];
+      items: string[];
+      environment: string[];
+    };
+    actions: {
+      primary: string;
+      secondary: string[];
+      movements: string[];
+    };
+    technical: {
+      lighting: string;
+      cameraAngle: string;
+      visualQuality: string;
+    };
+  };
 }
 
 // Zod schemas for validation

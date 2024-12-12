@@ -1,7 +1,6 @@
 import { OpenAI } from "openai";
 import { db } from "../../../db";
 import { keyframes, tags } from "@db/schema";
-import sharp from "sharp";
 import { ObjectDetectionAgent } from "./agents/objectDetectionAgent";
 import { SceneClassificationAgent } from "./agents/sceneClassificationAgent";
 import { EventDetectionAgent } from "./agents/eventDetectionAgent";
@@ -27,36 +26,17 @@ export class FrameAnalyzer {
     try {
       console.log(`Processing frame ${frameNumber} at timestamp ${timestamp}`);
       
-      // Validate and process the image buffer
-      let processedBuffer: Buffer;
-      try {
-        // First try to load the image with Sharp to validate it
-        const image = sharp(frameBuffer);
-        const metadata = await image.metadata();
-        
-        if (!metadata.width || !metadata.height) {
-          throw new Error('Invalid image dimensions');
-        }
-        
-        console.log(`Frame ${frameNumber} metadata:`, {
-          format: metadata.format,
-          width: metadata.width,
-          height: metadata.height,
-          space: metadata.space
-        });
-        
-        // Process the image
-        processedBuffer = await image
-          .resize(800, null, { fit: 'inside' })
-          .jpeg({ quality: 80 })
-          .toBuffer();
-          
-      } catch (imageError) {
-        console.error(`Error processing frame ${frameNumber}:`, imageError);
-        throw new Error(`Image processing failed: ${imageError.message}`);
+      // Basic validation of the buffer
+      if (!Buffer.isBuffer(frameBuffer)) {
+        throw new Error('Invalid buffer provided');
       }
       
-      const base64Image = processedBuffer.toString('base64');
+      if (frameBuffer.length === 0) {
+        throw new Error('Empty buffer provided');
+      }
+      
+      // Convert buffer directly to base64
+      const base64Image = frameBuffer.toString('base64');
 
       // Step 1: Object Detection
       const objectDetection = await this.objectDetectionAgent.analyze(
@@ -114,8 +94,8 @@ export class FrameAnalyzer {
 
   private async saveAnalysis(analysis: FrameAnalysis, videoId: number) {
     try {
-      // Merge agent outputs into unified structure
-      const unifiedMetadata = {
+      // Build metadata from analysis
+      const metadata = {
         semanticDescription: {
           summary: analysis.narrative.summary,
           keyElements: analysis.narrative.keyElements,
@@ -142,6 +122,9 @@ export class FrameAnalyzer {
           visualQuality: analysis.sceneClassification.attributes.visualQuality || "high",
         },
       };
+
+      // Set metadata in analysis
+      analysis.metadata = metadata;
 
       // Save keyframe with unified metadata
       const [keyframe] = await db.insert(keyframes).values({

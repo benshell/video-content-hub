@@ -22,17 +22,11 @@ export class ObjectDetectionAgent {
             content: [
               {
                 type: "text",
-                text: "Analyze this image for object detection:"
+                text: "Analyze this image for object detection. Return results in a structured format with bounding boxes and confidence scores."
               },
               {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
-              },
-              {
-                type: "text",
-                text: "Detect and locate objects in this frame. Return results in a structured format with bounding boxes and confidence scores."
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }

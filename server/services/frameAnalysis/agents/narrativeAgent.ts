@@ -29,20 +29,14 @@ export class NarrativeAgent {
             content: [
               {
                 type: "text",
-                text: "Analyze this image for narrative context:"
-              },
-              {
-                type: "image",
-                image_url: {
-                  url: `data:image/jpeg;base64,${frameBase64}`
-                }
-              },
-              {
-                type: "text",
-                text: `Provide a narrative summary for this frame. Context: 
+                text: `Analyze this image for narrative context. Consider the following context:
                 Objects: ${JSON.stringify(objectDetection)}
                 Scene: ${JSON.stringify(sceneClassification)}
                 Events: ${JSON.stringify(events)}`
+              },
+              {
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${frameBase64}` }
               }
             ]
           }
