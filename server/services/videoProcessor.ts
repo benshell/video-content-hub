@@ -580,14 +580,32 @@ async function analyzeFrame(buffer: Buffer, frameNumber: number, timestamp: numb
     if (!['ffd8', '8950', '424d'].includes(signature)) { // Check for JPEG, PNG, or BMP signatures
       throw new Error(`Unsupported image format (signature: ${signature})`);
     }
+
+    // Resize image to optimal size for GPT-4 analysis
+    console.log('Resizing image for optimal analysis...');
+    const resizedImage = await sharp(buffer)
+      .resize(512, 512, { 
+        fit: 'inside',
+        withoutEnlargement: true,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    console.log('Image optimization complete:', {
+      originalSize: buffer.length,
+      optimizedSize: resizedImage.length,
+      reductionPercent: ((buffer.length - resizedImage.length) / buffer.length * 100).toFixed(2) + '%'
+    });
     
-    return await frameAnalyzer.analyzeFrame(buffer, frameNumber, timestamp, videoId);
+    return await frameAnalyzer.analyzeFrame(resizedImage, frameNumber, timestamp, videoId);
   } catch (error) {
     console.error(`Error analyzing frame ${frameNumber}:`, {
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       bufferSize: buffer?.length,
       timestamp,
-      videoId
+      videoId,
+      stage: 'frame_optimization'
     });
     throw error;
   }
