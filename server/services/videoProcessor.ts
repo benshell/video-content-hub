@@ -176,20 +176,11 @@ export async function processVideo(videoId: number, videoPath: string) {
         try {
           console.log(`Processing frame at timestamp: ${frame.timestamp}`);
           
-          // Read and optimize the frame for GPT-4 processing
+          // Read the frame file directly
           const buffer = await fs.readFile(frame.path);
           
-          // Resize and optimize the image for GPT-4
-          const optimizedBuffer = await sharp(buffer)
-            .resize(512, 512, { 
-              fit: 'inside',
-              withoutEnlargement: true 
-            })
-            .jpeg({ quality: 80 })
-            .toBuffer();
-          
-          // Process the optimized frame with OpenAI Vision analysis
-          const analysis = await analyzeFrame(optimizedBuffer, processedFrames, frame.timestamp, videoId);
+          // Process the frame with OpenAI Vision analysis
+          const analysis = await analyzeFrame(buffer, processedFrames, frame.timestamp, videoId);
           
           // Save keyframe with relative path
           const relativePath = frame.path.replace(process.cwd(), '');
@@ -584,22 +575,10 @@ async function analyzeFrame(buffer: Buffer, frameNumber: number, timestamp: numb
       throw new Error('Empty buffer provided');
     }
     
-    // Validate image format and metadata using sharp
-    try {
-      const metadata = await sharp(buffer).metadata();
-      console.log('Frame metadata:', {
-        width: metadata.width,
-        height: metadata.height,
-        format: metadata.format,
-        size: buffer.length
-      });
-      
-      if (!metadata.width || !metadata.height || !metadata.format) {
-        throw new Error('Invalid image metadata');
-      }
-    } catch (error) {
-      console.error('Error validating image:', error);
-      throw new Error('Invalid image format or corrupted data');
+    // Check if buffer contains image data (simple magic number check)
+    const signature = buffer.slice(0, 2).toString('hex');
+    if (!['ffd8', '8950', '424d'].includes(signature)) { // Check for JPEG, PNG, or BMP signatures
+      throw new Error(`Unsupported image format (signature: ${signature})`);
     }
     
     return await frameAnalyzer.analyzeFrame(buffer, frameNumber, timestamp, videoId);

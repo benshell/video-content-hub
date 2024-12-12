@@ -11,7 +11,7 @@ export class ObjectDetectionAgent {
   async analyze(frameBase64: string, frameNumber: number, timestamp: number): Promise<ObjectDetectionResult> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-2024-08-06",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
