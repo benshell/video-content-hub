@@ -146,13 +146,11 @@ export class FrameAnalyzer {
 
       // Save results to database within a transaction
       const result = await db.transaction(async (tx) => {
-        console.log('Starting transaction with videoId:', videoId);
-        
         // Save keyframe with metadata
         const [keyframe] = await tx
           .insert(keyframes)
           .values({
-            videoId: videoId, // Explicitly set videoId
+            videoId,
             timestamp: analysis.timestamp,
             metadata: analysis.metadata,
           })
@@ -162,26 +160,23 @@ export class FrameAnalyzer {
           id: keyframe.id,
           timestamp: keyframe.timestamp,
           metadata: analysis.metadata,
-          videoId: videoId, // Log videoId for verification
         });
 
-        // Create tags from all sources with explicit videoId
-        const tagsToCreate = analysis.tags?.map(tag => ({
-          videoId: videoId, // Explicitly set videoId
+        // Create tags from all sources
+        const tagsToCreate = analysis.tags.map(tag => ({
+          videoId,
           name: tag.name,
           category: tag.category,
           timestamp: analysis.timestamp,
           confidence: Math.round(tag.confidence),
           aiGenerated: 1,
-        })) || [];
+        }));
 
-        // Only insert tags if we have any
-        const insertedTags = tagsToCreate.length > 0 
-          ? await tx
-              .insert(tags)
-              .values(tagsToCreate)
-              .returning()
-          : [];
+        // Batch insert all tags
+        const insertedTags = await tx
+          .insert(tags)
+          .values(tagsToCreate)
+          .returning();
 
         console.log('Created tags:', {
           count: insertedTags.length,

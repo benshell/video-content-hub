@@ -1,0 +1,185 @@
+Raw event detection response: {
+  content: '\n' +
+    '    {\n' +
+    '        "startFrame": 0,\n' +
+    '        "endFrame": 0,\n' +
+    '        "startTime": 0,\n' +
+    '        "endTime": 1,\n' +
+    '        "eventType": "scene change",\n' +
+    '        "confidence": 0.95,\n' +
+    '        "description": "Transition...',
+  length: 346
+}
+JSON Parse Error: Error: Invalid events array in response
+    at EventDetectionAgent.detectEvents (/home/runner/video-content-hub/server/services/frameAnalysis/agents/eventDetectionAgent.ts:83:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:74:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 0)
+    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)
+Raw content causing parse error: 
+    {
+        "startFrame": 0,
+        "endFrame": 0,
+        "startTime": 0,
+        "endTime": 1,
+        "eventType": "scene change",
+        "confidence": 0.95,
+        "description": "Transition from an image with a person, chair, and text to a locker room scene with a person.",
+        "involvedObjects": ["person", "chair", "text"]
+    }
+Raw GPT-4 response: {
+  content: '{\n' +
+    '  "summary": "A person in a casual red tracksuit is standing in a locker room, smiling and holding a phone. The setting is informal, with personal items scattered around, indicating a relaxed atmosp...',
+  length: 739,
+  type: 'string'
+}
+Saved keyframe: {
+  id: 5,
+  timestamp: 1,
+  metadata: {
+    semanticDescription: {
+      summary: 'A person in a casual red tracksuit is standing in a locker room, smiling and holding a phone. The setting is informal, with personal items scattered around, indicating a relaxed atmosphere.',
+      keyElements: [Array],
+      mood: 'casual',
+      composition: 'central focus'
+    },
+    objects: { people: [Array], items: [], environment: [Array] },
+    actions: {
+      primary: 'person standing and smiling',
+      secondary: [Array],
+      movements: []
+    },
+    technical: {
+      lighting: 'indoor, artificial',
+      cameraAngle: 'eye-level',
+      visualQuality: 'average'
+    }
+  }
+}
+Error analyzing frame 0: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)
+Error analyzing frame 0: {
+  error: "Cannot read properties of undefined (reading 'videoId')",
+  bufferSize: 52725,
+  timestamp: 1,
+  videoId: 39,
+  stage: 'frame_optimization'
+}
+Error processing frame at 1: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)
+Error processing video: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)
+Error processing video: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 1)
+    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)
+Full error details: {
+  message: "Cannot read properties of undefined (reading 'videoId')",
+  stack: "TypeError: Cannot read properties of undefined (reading 'videoId')\n" +
+    '    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)\n' +
+    '    at Array.map (<anonymous>)\n' +
+    '    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)\n' +
+    '    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)\n' +
+    '    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)\n' +
+    '    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)\n' +
+    '    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)\n' +
+    '    at async Promise.all (index 1)\n' +
+    '    at processVideo (/home/runner/video-content-hub/server/services/videoProcessor.ts:175:7)',
+  videoId: 39
+}
+Raw GPT-4 response: {
+  content: '{\n' +
+    `  "summary": "A person is shown standing in a locker room, wearing red casual attire, with visible text above them reading 'Guess what'. The setting appears informal and playful, emphasizing the per...`,
+  length: 759,
+  type: 'string'
+}
+Saved keyframe: {
+  id: 6,
+  timestamp: 0,
+  metadata: {
+    semanticDescription: {
+      summary: "A person is shown standing in a locker room, wearing red casual attire, with visible text above them reading 'Guess what'. The setting appears informal and playful, emphasizing the person's posture and expression.",
+      keyElements: [Array],
+      mood: 'casual, playful',
+      composition: 'central subject'
+    },
+    objects: { people: [Array], items: [Array], environment: [Array] },
+    actions: { primary: 'person standing', secondary: [Array], movements: [] },
+    technical: {
+      lighting: 'indoor, artificial',
+      cameraAngle: 'eye-level',
+      visualQuality: 'clear'
+    }
+  }
+}
+Error analyzing frame 0: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 0)
+Error analyzing frame 0: {
+  error: "Cannot read properties of undefined (reading 'videoId')",
+  bufferSize: 50644,
+  timestamp: 0,
+  videoId: 39,
+  stage: 'frame_optimization'
+}
+Error processing frame at 0: TypeError: Cannot read properties of undefined (reading 'videoId')
+    at <anonymous> (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:92:73)
+    at Array.map (<anonymous>)
+    at PgInsertBuilder.values (/home/runner/video-content-hub/node_modules/src/pg-core/query-builders/insert.ts:87:31)
+    at <anonymous> (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:178:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at NeonSession.transaction (/home/runner/video-content-hub/node_modules/src/neon-serverless/session.ts:203:19)
+    at FrameAnalyzer.analyzeFrame (/home/runner/video-content-hub/server/services/frameAnalysis/frameAnalyzer.ts:148:22)
+    at analyzeFrame (/home/runner/video-content-hub/server/services/videoProcessor.ts:606:12)
+    at <anonymous> (/home/runner/video-content-hub/server/services/videoProcessor.ts:183:28)
+    at async Promise.all (index 0)
