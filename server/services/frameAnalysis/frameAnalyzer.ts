@@ -139,17 +139,17 @@ export class FrameAnalyzer {
       // Set metadata in analysis
       analysis.metadata = metadata;
 
-      // Save keyframe with unified metadata
+      // Save keyframe with metadata
       const [keyframe] = await db.insert(keyframes).values({
         videoId,
         timestamp: analysis.timestamp,
-        metadata: unifiedMetadata,
+        metadata: metadata,
       }).returning();
 
       console.log('Saved keyframe with metadata:', {
         id: keyframe.id,
         timestamp: keyframe.timestamp,
-        metadata: unifiedMetadata,
+        metadata: metadata,
       });
 
       // Create tags from all sources
