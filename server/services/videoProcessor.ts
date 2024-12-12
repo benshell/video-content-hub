@@ -350,7 +350,7 @@ async function extractFrames(videoPath: string, outputDir: string, retryCount = 
         .on('end', () => {
           console.log(`Frame extraction completed. Processed ${framesProcessed} frames.`);
         })
-        .output(path.join(outputDir, 'frame-%d.jpg'))
+        .output(path.join(outputDir, 'frame-%d.jpeg'))
         .on('end', async () => {
           try {
             console.log('Frame extraction completed, starting verification...');
@@ -363,7 +363,7 @@ async function extractFrames(videoPath: string, outputDir: string, retryCount = 
             }
 
             // Use a more strict regex pattern for frame files and proper numeric sorting
-            const framePattern = /^frame-(\d+)\.jpg$/;
+            const framePattern = /^frame-(\d+)\.jpeg$/;
             const frameFiles = files
               .filter(f => {
                 const match = f.match(framePattern);
