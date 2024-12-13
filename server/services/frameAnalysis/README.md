@@ -1,116 +1,230 @@
 # Frame Analysis System
 
-## Overview
-The Frame Analysis System is a sophisticated video content analysis pipeline that processes video frames using multiple specialized AI agents. Each agent focuses on different aspects of video analysis, from object detection to narrative understanding.
+## System Architecture Overview
+The Frame Analysis System implements a sophisticated multi-agent architecture for video content analysis. Each component is designed to work independently while maintaining coordinated data flow through the system.
 
-## Video Processing Pipeline
+## Component Architecture
 
-### videoProcessor.ts
-The video processor serves as the entry point for video analysis:
-- Handles video upload and processing
-- Extracts frames at specified intervals
-- Coordinates with the frame analysis system
-- Manages temporary file cleanup
-- Provides progress tracking and status updates
-
-## Frame Analysis Components
-
-### frameAnalyzer.ts
-The main orchestrator that:
-- Coordinates all analysis agents
-- Manages the analysis pipeline
-- Handles database transactions
-- Combines results from different agents
-- Generates unified metadata and tags
-
-### Specialized AI Agents
-
-#### 1. Object Detection Agent (objectDetectionAgent.ts)
-- Identifies and locates objects within frames
-- Provides bounding boxes and confidence scores
-- Specializes in person detection and object classification
-- Uses OpenAI's vision model for accurate detection
-
-#### 2. Scene Classification Agent (sceneClassificationAgent.ts)
-- Analyzes overall scene composition
-- Determines lighting conditions and visual quality
-- Identifies scene settings and moods
-- Provides confidence scores for classifications
-
-#### 3. Event Detection Agent (eventDetectionAgent.ts)
-- Maintains a frame buffer for temporal analysis
-- Identifies actions and events across frame sequences
-- Tracks object interactions over time
-- Generates event descriptions with timestamps
-
-#### 4. Narrative Agent (narrativeAgent.ts)
-- Generates human-readable scene descriptions
-- Identifies key narrative elements
-- Analyzes actions and their significance
-- Provides context for detected events
-
-## Data Models and Types
-
-### Types (types.ts)
-Contains comprehensive type definitions for:
-- Frame analysis results
-- Object detection data
-- Scene classifications
-- Temporal events
-- Narrative contexts
-- Unified metadata structure
-
-## Database Integration
-
-The system uses a PostgreSQL database to store:
-- Frame analysis results
-- Generated tags
-- Video metadata
-- Temporal events
-- Scene classifications
-
-### Transaction Management
-- Uses Drizzle ORM for database operations
-- Implements atomic transactions for data consistency
-- Handles batch insertions for performance
-- Maintains referential integrity
-
-## Usage Example
-
+### 1. Video Processor (videoProcessor.ts)
+Entry point for video processing pipeline:
 ```typescript
-// Initialize the frame analyzer
-const frameAnalyzer = new FrameAnalyzer(openai);
+class VideoProcessor {
+  constructor(openai: OpenAI, frameAnalyzer: FrameAnalyzer) {
+    this.openai = openai;
+    this.frameAnalyzer = frameAnalyzer;
+  }
+}
+```
+Key responsibilities:
+- Frame extraction using FFmpeg
+- Frame buffering and batch processing
+- Progress tracking and error handling
+- Temporary file management
+- Analysis coordination
 
-// Process a video frame
-const analysis = await frameAnalyzer.analyzeFrame(
-  frameBuffer,
-  frameNumber,
-  timestamp,
-  videoId
-);
+### 2. Frame Analyzer (frameAnalyzer.ts)
+Central orchestrator implementing the Mediator pattern:
+```typescript
+class FrameAnalyzer {
+  constructor(openai: OpenAI) {
+    this.objectDetectionAgent = new ObjectDetectionAgent(openai);
+    this.sceneClassificationAgent = new SceneClassificationAgent(openai);
+    this.eventDetectionAgent = new EventDetectionAgent(openai);
+    this.narrativeAgent = new NarrativeAgent(openai);
+  }
+}
+```
+Responsibilities:
+- Agent lifecycle management
+- Analysis pipeline orchestration
+- Result aggregation and normalization
+- Database transaction management
+- Error handling and recovery
 
-// Access analysis results
-const {
-  objectDetection,
-  sceneClassification,
-  events,
-  narrative,
-  tags,
-  metadata
-} = analysis;
+## Specialized AI Agents
+
+### 1. Object Detection Agent (objectDetectionAgent.ts)
+```typescript
+class ObjectDetectionAgent {
+  async analyze(frameBase64: string, frameNumber: number, timestamp: number): Promise<ObjectDetectionResult>
+```
+Technical specifications:
+- Uses OpenAI's GPT-4 Vision model for object detection
+- Implements bounding box calculation
+- Confidence score normalization (0-1 range)
+- Object classification with hierarchical categories
+- Real-time detection optimization
+
+Data flow:
+1. Input: Base64 encoded frame image
+2. Processing: OpenAI API interaction
+3. Output: Structured object detection results
+4. Integration: Results feed into Scene Classification
+
+### 2. Scene Classification Agent (sceneClassificationAgent.ts)
+```typescript
+class SceneClassificationAgent {
+  async analyze(
+    frameBase64: string,
+    frameNumber: number,
+    timestamp: number,
+    objectDetection: ObjectDetectionResult
+  ): Promise<SceneClassification>
+```
+Technical details:
+- Scene attribute extraction
+- Lighting condition analysis
+- Composition assessment
+- Mood detection algorithm
+- Visual quality evaluation
+
+Dependencies:
+- Requires object detection results
+- Integrates with narrative generation
+- Feeds into event detection
+
+### 3. Event Detection Agent (eventDetectionAgent.ts)
+```typescript
+class EventDetectionAgent {
+  private frameBuffer: Array<{
+    frameNumber: number;
+    timestamp: number;
+    objectDetection: ObjectDetectionResult;
+    sceneClassification: SceneClassification;
+  }>;
+
+  async detectEvents(): Promise<TemporalEvent[]>
+```
+Implementation details:
+- Circular buffer implementation for frame history
+- Temporal pattern recognition
+- Event confidence calculation
+- Object interaction tracking
+- Event duration estimation
+
+Buffer management:
+- 30-frame buffer (1 second at 30fps)
+- FIFO implementation
+- Memory-efficient storage
+- Automatic cleanup
+
+### 4. Narrative Agent (narrativeAgent.ts)
+```typescript
+class NarrativeAgent {
+  async analyze(
+    frameBase64: string,
+    frameNumber: number,
+    timestamp: number,
+    objectDetection: ObjectDetectionResult,
+    sceneClassification: SceneClassification,
+    events: TemporalEvent[]
+  ): Promise<NarrativeContext>
+```
+Advanced features:
+- Context-aware summarization
+- Key element extraction
+- Action hierarchy analysis
+- Semantic relationship mapping
+- Natural language generation
+
+## Data Flow and Integration
+
+### Analysis Pipeline Sequence
+1. Video frame extraction (VideoProcessor)
+2. Object detection analysis
+3. Scene classification with object context
+4. Event detection using temporal buffer
+5. Narrative generation with full context
+6. Result aggregation and storage
+
+### Inter-Agent Communication
+```typescript
+interface AnalysisContext {
+  frameBuffer: Buffer;
+  frameNumber: number;
+  timestamp: number;
+  objectDetection?: ObjectDetectionResult;
+  sceneClassification?: SceneClassification;
+  events?: TemporalEvent[];
+}
 ```
 
-## Error Handling
+### Database Integration
+Transaction flow:
+```typescript
+await db.transaction(async (tx) => {
+  const [keyframe] = await tx.insert(keyframes).values({...}).returning();
+  const insertedTags = await tx.insert(tags).values([...]).returning();
+  return { keyframe, tags: insertedTags };
+});
+```
 
-The system implements robust error handling:
-- Validates API responses
-- Handles malformed JSON responses
-- Provides detailed error logging
-- Implements graceful fallbacks
+## Performance Optimizations
 
-## Performance Considerations
+### Batch Processing
+- Frame batching (5 frames per batch)
+- Parallel agent execution
+- Efficient memory management
+- Resource pooling
 
-- Batch processing for multiple frames
-- Buffer management for temporal analysis
-- Efficient database operations
-- Resource cleanup after processing
+### Error Recovery
+- Automatic retry mechanism
+- Graceful degradation
+- Partial result handling
+- Transaction rollback support
+
+## Usage Examples
+
+### Basic Frame Analysis
+```typescript
+const analyzer = new FrameAnalyzer(openai);
+const result = await analyzer.analyzeFrame(frameBuffer, frameNumber, timestamp, videoId);
+```
+
+### Batch Processing
+```typescript
+const results = await analyzer.analyzeBatch(frames, videoId);
+```
+
+### Event Detection
+```typescript
+const events = await eventDetectionAgent.detectEvents();
+```
+
+## API Response Handling
+
+### OpenAI Vision API Integration
+```typescript
+const response = await openai.chat.completions.create({
+  model: "gpt-4o-2024-08-06",
+  messages: [
+    {
+      role: "system",
+      content: "Analysis prompt"
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Analysis request" },
+        { type: "image_url", image_url: { url: base64Image } }
+      ]
+    }
+  ],
+  response_format: { type: "json_object" }
+});
+```
+
+## Error Handling and Validation
+
+### Response Validation
+```typescript
+const isValidEvent = (event: any): event is TemporalEvent => 
+  typeof event.startFrame === 'number' &&
+  typeof event.endFrame === 'number' &&
+  typeof event.startTime === 'number' &&
+  typeof event.endTime === 'number' &&
+  typeof event.eventType === 'string' &&
+  typeof event.confidence === 'number' &&
+  typeof event.description === 'string' &&
+  Array.isArray(event.involvedObjects);
+```
