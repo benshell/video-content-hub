@@ -15,7 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-interface FrameMetadata {
+type FrameMetadata = {
   semanticDescription: {
     summary: string;
     keyElements: string[];
@@ -39,7 +39,14 @@ interface FrameMetadata {
   };
 }
 
-interface FrameMetadata {
+interface ProcessedKeyframe {
+  id: number;
+  timestamp: number;
+  thumbnailUrl?: string;
+  metadata: FrameMetadata;
+}
+
+type FrameMetadata = {
   semanticDescription: {
     summary: string;
     keyElements: string[];
@@ -61,6 +68,13 @@ interface FrameMetadata {
     cameraAngle: string;
     visualQuality: string;
   };
+}
+
+interface ProcessedKeyframe {
+  id: number;
+  timestamp: number;
+  thumbnailUrl?: string;
+  metadata: FrameMetadata;
 }
 
 interface ProcessedKeyframe {
