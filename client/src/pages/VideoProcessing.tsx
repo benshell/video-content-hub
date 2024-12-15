@@ -15,35 +15,35 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-type FrameMetadata = {
-  semanticDescription: {
-    summary: string;
-    keyElements: string[];
-    mood: string;
-    composition: string;
-  };
-  objects: {
-    people: string[];
-    items: string[];
-    environment: string[];
-  };
-  actions: {
-    primary: string;
-    secondary: string[];
-    movements: string[];
-  };
-  technical: {
-    lighting: string;
-    cameraAngle: string;
-    visualQuality: string;
-  };
-}
+
 
 interface ProcessedKeyframe {
   id: number;
   timestamp: number;
   thumbnailUrl?: string;
-  metadata?: FrameMetadata;
+  metadata: {
+    semanticDescription: {
+      summary: string;
+      keyElements: string[];
+      mood: string;
+      composition: string;
+    };
+    objects: {
+      people: string[];
+      items: string[];
+      environment: string[];
+    };
+    actions: {
+      primary: string;
+      secondary: string[];
+      movements: string[];
+    };
+    technical: {
+      lighting: string;
+      cameraAngle: string;
+      visualQuality: string;
+    };
+  };
 }
 
 interface VideoWithKeyframes extends Video {
