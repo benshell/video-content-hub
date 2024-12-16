@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Video, Keyframe } from "@db/schema";
 import { Card } from "@/components/ui/card";
-import { Clock, Tag } from "lucide-react";
+import { Clock } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,25 +23,32 @@ export default function TimelineViewer({ video }: TimelineViewerProps) {
   };
 
   useEffect(() => {
-    const video = document.querySelector('video');
-    if (video) {
-      videoRef.current = video;
-      video.addEventListener('timeupdate', () => {
-        setCurrentTime(video.currentTime);
-      });
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      videoRef.current = videoElement;
+      const handleTimeUpdate = () => {
+        setCurrentTime(videoElement.currentTime);
+      };
+      videoElement.addEventListener('timeupdate', handleTimeUpdate);
+      return () => {
+        videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      };
     }
   }, []);
 
   const handleTimelineClick = (time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time;
+      setCurrentTime(time);
     }
   };
 
   const renderMetadataBadges = (metadata: any) => {
+    if (!metadata) return [];
+    
     const badges = [];
     
-    if (metadata?.actions?.primary) {
+    if (metadata.actions?.primary) {
       badges.push(
         <Badge key="action" variant="secondary" className="mr-1">
           {metadata.actions.primary}
@@ -49,7 +56,7 @@ export default function TimelineViewer({ video }: TimelineViewerProps) {
       );
     }
 
-    if (metadata?.objects?.people?.length) {
+    if (metadata.objects?.people?.length) {
       badges.push(
         <Badge key="people" variant="outline" className="mr-1">
           {metadata.objects.people.length} People
@@ -57,7 +64,7 @@ export default function TimelineViewer({ video }: TimelineViewerProps) {
       );
     }
 
-    if (metadata?.technical?.lighting) {
+    if (metadata.technical?.lighting) {
       badges.push(
         <Badge key="lighting" variant="secondary" className="mr-1">
           {metadata.technical.lighting}
