@@ -115,6 +115,28 @@ export async function processVideo(videoId: number, videoPath: string) {
     // Ensure the frames directory exists and is empty
     await fs.rm(framesDir, { recursive: true, force: true }).catch(() => {});
     await fs.mkdir(framesDir, { recursive: true });
+
+    // Extract first frame as thumbnail
+    const thumbnailDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+    await fs.mkdir(thumbnailDir, { recursive: true });
+    const thumbnailPath = path.join(thumbnailDir, `thumbnail-${videoId}.jpg`);
+    
+    await new Promise((resolve, reject) => {
+      ffmpeg(videoPath)
+        .screenshots({
+          timestamps: [0],
+          filename: `thumbnail-${videoId}.jpg`,
+          folder: thumbnailDir,
+          size: '320x240'
+        })
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    // Update video with thumbnail URL
+    await db.update(videos)
+      .set({ thumbnailUrl: `/uploads/thumbnails/thumbnail-${videoId}.jpg` })
+      .where(eq(videos.id, videoId));
     
     // Get video duration and update video record
     const duration = await new Promise<number>((resolve, reject) => {
