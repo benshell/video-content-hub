@@ -1,0 +1,335 @@
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | boolean | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/components/TimelineViewer.tsx:82:35
+
+    80 |     .map((keyframe) => ({
+    81 |       timestamp: keyframe.timestamp,
+  > 82 |       summary: keyframe.metadata?.semanticDescription?.summary || '',
+       |                                   ^^^^^^^^^^^^^^^^^^^
+    83 |       metadata: keyframe.metadata
+    84 |     }));
+    85 |
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | boolean | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/components/TimelineViewer.tsx:151:37
+
+    149 |               <div className="p-2 text-xs">
+    150 |                 <div className="text-center">{formatTime(keyframe.timestamp)}</div>
+  > 151 |                 {keyframe.metadata?.semanticDescription?.keyElements && (
+        |                                     ^^^^^^^^^^^^^^^^^^^
+    152 |                   <div className="absolute inset-0 bg-black/75 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs overflow-y-auto">
+    153 |                     {keyframe.metadata.semanticDescription.keyElements.join(', ')}
+    154 |                   </div>
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | boolean | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/components/TimelineViewer.tsx:153:40
+
+    151 |                 {keyframe.metadata?.semanticDescription?.keyElements && (
+    152 |                   <div className="absolute inset-0 bg-black/75 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs overflow-y-auto">
+  > 153 |                     {keyframe.metadata.semanticDescription.keyElements.join(', ')}
+        |                                        ^^^^^^^^^^^^^^^^^^^
+    154 |                   </div>
+    155 |                 )}
+    156 |               </div>
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:141:86
+
+    139 |                                   <div className="bg-gray-50 p-4 rounded-lg">
+    140 |                                     <h4 className="font-semibold text-base mb-2">Semantic Analysis</h4>
+  > 141 |                                     <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.summary}</p>
+        |                                                                                      ^^^^^^^^^^^^^^^^^^^
+    142 |                                     {keyframe.metadata?.semanticDescription?.keyElements?.length > 0 && (
+    143 |                                       <div className="mt-2">
+    144 |                                         <p className="font-medium text-gray-600">Key Elements</p>
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:142:57
+
+    140 |                                     <h4 className="font-semibold text-base mb-2">Semantic Analysis</h4>
+    141 |                                     <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.summary}</p>
+  > 142 |                                     {keyframe.metadata?.semanticDescription?.keyElements?.length > 0 && (
+        |                                                         ^^^^^^^^^^^^^^^^^^^
+    143 |                                       <div className="mt-2">
+    144 |                                         <p className="font-medium text-gray-600">Key Elements</p>
+    145 |                                         <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:146:63
+
+    144 |                                         <p className="font-medium text-gray-600">Key Elements</p>
+    145 |                                         <div className="flex flex-wrap gap-1 mt-1">
+  > 146 |                                           {keyframe.metadata?.semanticDescription?.keyElements?.map((element: string, i: number) => (
+        |                                                               ^^^^^^^^^^^^^^^^^^^
+    147 |                                             <Badge key={i} variant="outline">{element}</Badge>
+    148 |                                           ))}
+    149 |                                         </div>
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:155:89
+
+    153 |                                       <div>
+    154 |                                         <p className="font-medium text-gray-600">Mood</p>
+  > 155 |                                         <p className="text-gray-700">{keyframe.metadata.semanticDescription?.mood}</p>
+        |                                                                                         ^^^^^^^^^^^^^^^^^^^
+    156 |                                       </div>
+    157 |                                       <div>
+    158 |                                         <p className="font-medium text-gray-600">Composition</p>
+
+ ERROR(TypeScript)  Property 'semanticDescription' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'semanticDescription' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:159:90
+
+    157 |                                       <div>
+    158 |                                         <p className="font-medium text-gray-600">Composition</p>
+  > 159 |                                         <p className="text-gray-700">{keyframe.metadata?.semanticDescription?.composition}</p>
+        |                                                                                          ^^^^^^^^^^^^^^^^^^^
+    160 |                                       </div>
+    161 |                                     </div>
+    162 |                                   </div>
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:167:59
+
+    165 |                                     <div className="bg-gray-50 p-4 rounded-lg">
+    166 |                                       <h4 className="font-semibold text-base mb-2">Objects</h4>
+  > 167 |                                       {keyframe.metadata?.objects?.people?.length > 0 && (
+        |                                                           ^^^^^^^
+    168 |                                         <div className="mb-3">
+    169 |                                           <p className="font-medium text-gray-600">People</p>
+    170 |                                           <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:171:64
+
+    169 |                                           <p className="font-medium text-gray-600">People</p>
+    170 |                                           <div className="flex flex-wrap gap-1 mt-1">
+  > 171 |                                             {keyframe.metadata.objects.people.map((person: string, i: number) => (
+        |                                                                ^^^^^^^
+    172 |                                               <Badge key={i} variant="secondary">{person}</Badge>
+    173 |                                             ))}
+    174 |                                           </div>
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:177:59
+
+    175 |                                         </div>
+    176 |                                       )}
+  > 177 |                                       {keyframe.metadata?.objects?.items?.length > 0 && (
+        |                                                           ^^^^^^^
+    178 |                                         <div className="mb-3">
+    179 |                                           <p className="font-medium text-gray-600">Items</p>
+    180 |                                           <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:181:64
+
+    179 |                                           <p className="font-medium text-gray-600">Items</p>
+    180 |                                           <div className="flex flex-wrap gap-1 mt-1">
+  > 181 |                                             {keyframe.metadata.objects.items.map((item: string, i: number) => (
+        |                                                                ^^^^^^^
+    182 |                                               <Badge key={i} variant="secondary">{item}</Badge>
+    183 |                                             ))}
+    184 |                                           </div>
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:187:59
+
+    185 |                                         </div>
+    186 |                                       )}
+  > 187 |                                       {keyframe.metadata?.objects?.environment?.length > 0 && (
+        |                                                           ^^^^^^^
+    188 |                                         <div>
+    189 |                                           <p className="font-medium text-gray-600">Environment</p>
+    190 |                                           <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'objects' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'objects' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:191:64
+
+    189 |                                           <p className="font-medium text-gray-600">Environment</p>
+    190 |                                           <div className="flex flex-wrap gap-1 mt-1">
+  > 191 |                                             {keyframe.metadata.objects.environment.map((env: string, i: number) => (
+        |                                                                ^^^^^^^
+    192 |                                               <Badge key={i} variant="secondary">{env}</Badge>
+    193 |                                             ))}
+    194 |                                           </div>
+
+ ERROR(TypeScript)  Property 'actions' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'actions' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:203:90
+
+    201 |                                       <div className="mb-3">
+    202 |                                         <p className="font-medium text-gray-600">Primary Action</p>
+  > 203 |                                         <p className="text-gray-700">{keyframe.metadata?.actions?.primary}</p>
+        |                                                                                          ^^^^^^^
+    204 |                                       </div>
+    205 |                                       {keyframe.metadata?.actions?.secondary?.length > 0 && (
+    206 |                                         <div className="mb-3">
+
+ ERROR(TypeScript)  Property 'actions' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'actions' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:205:59
+
+    203 |                                         <p className="text-gray-700">{keyframe.metadata?.actions?.primary}</p>
+    204 |                                       </div>
+  > 205 |                                       {keyframe.metadata?.actions?.secondary?.length > 0 && (
+        |                                                           ^^^^^^^
+    206 |                                         <div className="mb-3">
+    207 |                                           <p className="font-medium text-gray-600">Secondary Actions</p>
+    208 |                                           <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'actions' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'actions' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:209:65
+
+    207 |                                           <p className="font-medium text-gray-600">Secondary Actions</p>
+    208 |                                           <div className="flex flex-wrap gap-1 mt-1">
+  > 209 |                                             {keyframe.metadata?.actions?.secondary?.map((action: string, i: number) => (
+        |                                                                 ^^^^^^^
+    210 |                                               <Badge key={i}>{action}</Badge>
+    211 |                                             ))}
+    212 |                                           </div>
+
+ ERROR(TypeScript)  Property 'actions' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'actions' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:215:59
+
+    213 |                                         </div>
+    214 |                                       )}
+  > 215 |                                       {keyframe.metadata?.actions?.movements?.length > 0 && (
+        |                                                           ^^^^^^^
+    216 |                                         <div>
+    217 |                                           <p className="font-medium text-gray-600">Movements</p>
+    218 |                                           <div className="flex flex-wrap gap-1 mt-1">
+
+ ERROR(TypeScript)  Property 'actions' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'actions' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:219:65
+
+    217 |                                           <p className="font-medium text-gray-600">Movements</p>
+    218 |                                           <div className="flex flex-wrap gap-1 mt-1">
+  > 219 |                                             {keyframe.metadata?.actions?.movements?.map((movement: string, i: number) => (
+        |                                                                 ^^^^^^^
+    220 |                                               <Badge key={i}>{movement}</Badge>
+    221 |                                             ))}
+    222 |                                           </div>
+
+ ERROR(TypeScript)  Property 'technical' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'technical' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:233:90
+
+    231 |                                       <div>
+    232 |                                         <p className="font-medium text-gray-600">Lighting</p>
+  > 233 |                                         <p className="text-gray-700">{keyframe.metadata?.technical?.lighting}</p>
+        |                                                                                          ^^^^^^^^^
+    234 |                                       </div>
+    235 |                                       <div>
+    236 |                                         <p className="font-medium text-gray-600">Camera Angle</p>
+
+ ERROR(TypeScript)  Property 'technical' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'technical' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:237:90
+
+    235 |                                       <div>
+    236 |                                         <p className="font-medium text-gray-600">Camera Angle</p>
+  > 237 |                                         <p className="text-gray-700">{keyframe.metadata?.technical?.cameraAngle}</p>
+        |                                                                                          ^^^^^^^^^
+    238 |                                       </div>
+    239 |                                       <div>
+    240 |                                         <p className="font-medium text-gray-600">Visual Quality</p>
+
+ ERROR(TypeScript)  Property 'technical' does not exist on type 'string | number | true | { [key: string]: Json; } | Json[]'.
+  Property 'technical' does not exist on type 'string'.
+ FILE  /home/runner/workspace/client/src/pages/VideoProcessing.tsx:241:90
+
+    239 |                                       <div>
+    240 |                                         <p className="font-medium text-gray-600">Visual Quality</p>
+  > 241 |                                         <p className="text-gray-700">{keyframe.metadata?.technical?.visualQuality}</p>
+        |                                                                                          ^^^^^^^^^
+    242 |                                       </div>
+    243 |                                     </div>
+    244 |                                   </div>
+
+ ERROR(TypeScript)  Parameter 'event' implicitly has an 'any' type.
+ FILE  /home/runner/workspace/server/services/frameAnalysis/agents/eventDetectionAgent.ts:115:28
+
+    113 |         }
+    114 |
+  > 115 |         return events.map((event) => ({
+        |                            ^^^^^
+    116 |           startFrame: event.startFrame,
+    117 |           endFrame: event.endFrame,
+    118 |           startTime: event.startTime,
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/workspace/server/services/videoProcessor.ts:107:51
+
+    105 |         .set({ processingStatus: 'failed' })
+    106 |         .where(eq(videos.id, videoId));
+  > 107 |       throw new Error(`Video validation failed: ${error.message}`);
+        |                                                   ^^^^^
+    108 |     }
+    109 |     
+    110 |     // Update video status to processing
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/workspace/server/services/videoProcessor.ts:317:44
+
+    315 |     console.log(`Video file validated: ${videoPath} (${stats.size} bytes)`);
+    316 |   } catch (error) {
+  > 317 |     throw new Error(`Invalid video file: ${error.message}`);
+        |                                            ^^^^^
+    318 |   }
+    319 |
+    320 |   // Function to attempt frame extraction with different settings
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/workspace/server/services/videoProcessor.ts:540:55
+
+    538 |     } catch (error) {
+    539 |       lastError = error;
+  > 540 |       console.error(`Attempt ${attempt + 1} failed:`, error.message);
+        |                                                       ^^^^^
+    541 |       
+    542 |       // Clean up any partial results
+    543 |       try {
+
+ ERROR(TypeScript)  'cleanupError' is of type 'unknown'.
+ FILE  /home/runner/workspace/server/services/videoProcessor.ts:549:66
+
+    547 |         ));
+    548 |       } catch (cleanupError) {
+  > 549 |         console.warn('Failed to clean up after failed attempt:', cleanupError.message);
+        |                                                                  ^^^^^^^^^^^^
+    550 |       }
+    551 |     }
+    552 |   }
+
+ ERROR(TypeScript)  Property 'message' does not exist on type '{}'.
+ FILE  /home/runner/workspace/server/services/videoProcessor.ts:554:99
+
+    552 |   }
+    553 |
+  > 554 |   throw new Error(`Frame extraction failed after ${retryCount} attempts. Last error: ${lastError?.message}`);
+        |                                                                                                   ^^^^^^^
+    555 | }
+    556 |
+    557 | interface AnalyzedFrame {
+
+[TypeScript] Found 28 errors. Watching for file changes.
