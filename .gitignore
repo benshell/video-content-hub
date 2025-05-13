@@ -6,3 +6,5 @@ vite.config.ts.*
 *.tar.gz
 uploads/
 *.mp4
+*.avi
+*.mov
