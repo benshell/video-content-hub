@@ -1,0 +1,52 @@
+[
+    {
+        "start_time": 24.579,
+        "end_time": 157.0,
+        "prev_audio": 23.629,
+        "next_audio": 158.679,
+        "start_cut": 24.104,
+        "start_transition": 0.9499999999999993,
+        "end_cut": 157.8395,
+        "end_transition": 1.679000000000002
+    },
+    {
+        "start_time": 224.309,
+        "end_time": 257.779,
+        "prev_audio": 223.429,
+        "next_audio": 259.308,
+        "start_cut": 223.869,
+        "start_transition": 0.8799999999999955,
+        "end_cut": 258.5435,
+        "end_transition": 1.5289999999999964
+    },
+    {
+        "start_time": 267.869,
+        "end_time": 375.16,
+        "prev_audio": 266.868,
+        "next_audio": 390.489,
+        "start_cut": 267.36850000000004,
+        "start_transition": 1.0010000000000332,
+        "end_cut": 382.8245,
+        "end_transition": 15.32899999999995
+    },
+    {
+        "start_time": 475.6,
+        "end_time": 574.07,
+        "prev_audio": 474.989,
+        "next_audio": 575.099,
+        "start_cut": 475.29449999999997,
+        "start_transition": 0.6110000000000468,
+        "end_cut": 574.5845,
+        "end_transition": 1.0289999999999964
+    },
+    {
+        "start_time": 613.77,
+        "end_time": 694.26,
+        "prev_audio": 612.989,
+        "next_audio": 694.71,
+        "start_cut": 613.3795,
+        "start_transition": 0.7809999999999491,
+        "end_cut": 694.485,
+        "end_transition": 0.4500000000000455
+    }
+]
