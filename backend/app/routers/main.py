@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import APIRouter
 
-from app.routers import stories, insights, assets, transcript, export
+from app.routers import stories, insights, assets, transcript, export, sources
 
 api_router = APIRouter()
 api_router.include_router(stories.router)
@@ -9,6 +9,7 @@ api_router.include_router(insights.router)
 api_router.include_router(assets.router)
 api_router.include_router(transcript.router)
 api_router.include_router(export.router)
+api_router.include_router(sources.router)
 
 @api_router.get("/", tags=["Health Check"])
 def read_root():

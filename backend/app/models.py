@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from typing import List, Optional
 from enum import Enum # New: for status enum
-from sqlmodel import Field, SQLModel
+from pydantic import BaseModel, Field
 
 # ---
 # Enums
@@ -26,23 +26,62 @@ class AssetType(str, Enum):
     B_ROLL = "b_roll"
     OUTPUT = "output"
 
+class SourceType(str, Enum):
+    """
+    Represents the type of news source
+    """
+    VIDEO = "video"
+    AUDIO = "audio"
+    ARTICLE = "article"
+
+
 # ---
 # Generic Models
 # ---
-class Message(SQLModel):
+class Message(BaseModel):
     """Model for a generic message."""
     message: str
 
-class Segment(SQLModel):
+class Segment(BaseModel):
     start: float
     end: float
+
+
+# ---
+# Source Models
+# ---
+
+class SourceBase(BaseModel):
+    """Base model for a news source item."""
+    source_id: uuid.UUID = Field(index=True) # Link back to the story
+    title: str = Field(min_length=1, max_length=255)
+    url: Optional[str] = Field(default=None, max_length=255)
+    source_type: str
+    created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SourceCreate(BaseModel):
+    """Model for creating a new source."""
+    title: str = Field(min_length=1, max_length=255)
+    url: Optional[str] = Field(default=None, max_length=255)
+    source_type: str
+
+class SourceUpdate(SourceCreate):
+    pass
+
+class SourcePublic(SourceBase):
+    """Public representation of a source."""
+    source_id: str
+
+class SourcesPublic(BaseModel):
+    """Public representation of an array of sources."""
+    data: list[SourcePublic]
 
 
 # ---
 # Insight Models
 # ---
 
-class InsightBase(SQLModel):
+class InsightBase(BaseModel):
     """
     Base model for a single insight, including fields that might be processed asynchronously.
     """
@@ -65,7 +104,7 @@ class InsightPublic(InsightBase):
     """
     # Inherits all fields from InsightBase
 
-class InsightsPublic(SQLModel):
+class InsightsPublic(BaseModel):
     """Public representation of an array of insights."""
     data: list[InsightPublic]
 
@@ -74,7 +113,7 @@ class InsightsPublic(SQLModel):
 # Asset Models
 # ---
 
-class AssetBase(SQLModel):
+class AssetBase(BaseModel):
     """Base model for a file asset."""
     # asset_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True) # Each insight has its own ID
     story_id: uuid.UUID = Field(index=True) # Link back to the story
@@ -85,7 +124,7 @@ class AssetBase(SQLModel):
 class AssetPublic(AssetBase):
     """Public representation of an asset."""
 
-class AssetsPublic(SQLModel):
+class AssetsPublic(BaseModel):
     """Public representation of an array of assets."""
     main_footage: AssetPublic
     b_roll: list[AssetPublic]
@@ -95,7 +134,7 @@ class AssetsPublic(SQLModel):
 # Story Models
 # ---
 
-class StoryBase(SQLModel):
+class StoryBase(BaseModel):
     """Base model for a story."""
     story_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str = Field(min_length=1, max_length=255)
@@ -112,7 +151,7 @@ class StoryPublic(StoryBase):
     This is what the UI will poll.
     """
 
-class StoriesPublic(SQLModel):
+class StoriesPublic(BaseModel):
     """Public representation of an array of stories."""
     data: list[StoryPublic]
 
@@ -121,7 +160,7 @@ class StoriesPublic(SQLModel):
 # Transcript Models
 # ---
 
-class TranscriptBase(SQLModel):
+class TranscriptBase(BaseModel):
     """Base model for a story."""
     story_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     transcript: Optional[str]
@@ -136,7 +175,7 @@ class TranscriptPublic(TranscriptBase):
 # Export Models
 # ---
 
-class ExportBase(SQLModel):
+class ExportBase(BaseModel):
     """Base model for an export."""
     story_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     public_url: str
