@@ -8,7 +8,7 @@ def create_folder(folder):
     folder_path = os.path.join(DATA_HOME, folder)
     try:
         os.makedirs(folder_path, exist_ok=True)
-        return folder
+        return folder_path
     except FileExistsError:
         print(f"Folder '{folder_path}' already exists.")
         raise
@@ -16,7 +16,7 @@ def create_folder(folder):
         print(f"An error occurred: {e}")
         raise
 
-def get_all_files_in_folder(folder):
+def get_all_files_in_folder(folder_path):
   """
   Gets a list of all files in a folder, including those in subfolders.
 
@@ -26,7 +26,6 @@ def get_all_files_in_folder(folder):
   Returns:
     A list of file paths.
   """
-  folder_path = os.path.join(DATA_HOME, folder)
   file_paths = []
   for root, _, files in os.walk(folder_path):
     for file in files:

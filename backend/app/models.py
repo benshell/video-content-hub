@@ -90,7 +90,7 @@ class SourcePublic(SourceBase):
 
     @computed_field
     def video_url(self) -> Optional[str]:
-        return f"{GCS_BASE_URL}/{self.video}" if self.video else None
+        return f"{GCS_BASE_URL}{self.video}" if self.video else None
 
 
 # ---

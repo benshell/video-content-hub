@@ -19,7 +19,7 @@ def download_from_youtube(video_id: str, subfolder: str) -> Tuple[str, str, str]
         return combined_file, audio_file, video_file
 
     # TODO: Fix the downloader; it only works locally. Workaround: upload manually.
-    raise RuntimeError()
+    raise RuntimeError('Unable to download YouTube video')
 
     # Step 1: Download combined audio+video with yt_dlp
     ydl_opts = {

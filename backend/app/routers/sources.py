@@ -11,6 +11,7 @@ router = APIRouter(prefix="/sources", tags=["Sources"])
 db = firestore.Client()
 
 COLLECTION_NAME = "sources"
+DATA_HOME = os.getenv("DATA_HOME", "data")
 
 @router.get("/", response_model=list[SourcePublic])
 async def read_all_sources() -> Any:
@@ -85,15 +86,16 @@ async def background_job_processor(source_id: str, job: JobType):
         raise HTTPException(status_code=404, detail="Source not found")
     source = SourcePublic(source_id=doc.id, **doc.to_dict())
     if job == JobType.IMPORT_SOURCE:
+        # Download the YouTube video
         video_id = get_youtube_id(source.url)
         if not video_id:
+            doc_ref.update({"import_status": JobStatus.FAILED})
             raise HTTPException(status_code=422, detail=f"Unrecognized URL. Currently the import only support YouTube. {source.url}")
-        # Download the YouTube video
         combined_file, audio_file, video_file = download_from_youtube(video_id, f"sources/{source.source_id}")
-        update_data = {
-            "video": combined_file,
-        }
-        doc_ref.update(update_data)
+        if not combined_file:
+            doc_ref.update({"import_status": JobStatus.FAILED})
+            raise HTTPException(status_code=422, detail=f"Unable to process video: {source.video_id}")
+        doc_ref.update({"import_status": JobStatus.COMPLETED, "video": combined_file.removeprefix(DATA_HOME)})
     elif job == JobType.TRANSCRIPT:
         if source.import_status != JobStatus.COMPLETED:
             raise HTTPException(status_code=422, detail=f"Unable to run job before source import is complete: {source.import_status}")
