@@ -31,7 +31,10 @@ async def get_source(source_id: str) -> Any:
     doc = db.collection(COLLECTION_NAME).document(source_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Source not found")
-    return SourcePublic(source_id=doc.id, **doc.to_dict())
+    source = doc.to_dict()
+    # data/sources/3fa85178-7bb0-4d49-8985-b8157b061238/JD1oRWPXxJg.mp4
+    # https://storage.googleapis.com/video-content-hub-data/sources/3fa85178-7bb0-4d49-8985-b8157b061238/JD1oRWPXxJg.mp4
+    return SourcePublic(source_id=doc.id, **source)
 
 @router.post("/", response_model=SourcePublic, status_code=status.HTTP_201_CREATED)
 async def create_source(source_in: SourceCreate) -> Any:

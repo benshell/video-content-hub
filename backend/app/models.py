@@ -1,8 +1,11 @@
+import os
 from datetime import datetime, timezone
 import uuid
 from typing import List, Optional
-from enum import Enum # New: for status enum
-from pydantic import BaseModel, Field
+from enum import Enum
+from pydantic import BaseModel, Field, computed_field
+
+GCS_BASE_URL = os.environ.get("GCS_BASE_URL", "https://storage.googleapis.com/video-content-hub-data")
 
 # ---
 # Enums
@@ -62,10 +65,10 @@ class Segment(BaseModel):
 
 class SourceBase(BaseModel):
     """Base model for a news source item."""
-    source_id: uuid.UUID = Field(index=True) # Link back to the story
     title: str = Field(min_length=1, max_length=255)
     url: Optional[str] = Field(default=None, max_length=255)
     source_type: str
+    video: Optional[str] = Field(default=None, exclude=True)  # Internal file path, exclude from serialization
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     import_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
     transcript_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
@@ -84,6 +87,10 @@ class SourceUpdate(SourceCreate):
 class SourcePublic(SourceBase):
     """Public representation of a source."""
     source_id: str
+
+    @computed_field
+    def video_url(self) -> Optional[str]:
+        return f"{GCS_BASE_URL}/{self.video}" if self.video else None
 
 
 # ---

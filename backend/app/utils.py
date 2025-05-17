@@ -8,7 +8,7 @@ def create_folder(folder):
     folder_path = os.path.join(DATA_HOME, folder)
     try:
         os.makedirs(folder_path, exist_ok=True)
-        return folder_path
+        return folder
     except FileExistsError:
         print(f"Folder '{folder_path}' already exists.")
         raise
@@ -16,7 +16,7 @@ def create_folder(folder):
         print(f"An error occurred: {e}")
         raise
 
-def get_all_files_in_folder(folder_path):
+def get_all_files_in_folder(folder):
   """
   Gets a list of all files in a folder, including those in subfolders.
 
@@ -26,18 +26,13 @@ def get_all_files_in_folder(folder_path):
   Returns:
     A list of file paths.
   """
+  folder_path = os.path.join(DATA_HOME, folder)
   file_paths = []
   for root, _, files in os.walk(folder_path):
     for file in files:
       file_path = os.path.join(root, file)
       file_paths.append(file_path)
   return file_paths
-
-# Example usage:
-folder_path = "/path/to/your/folder"  # Replace with the actual path to your folder
-all_files = get_all_files_in_folder(folder_path)
-for file_path in all_files:
-  print(file_path)
 
 def get_youtube_id(url, ignore_playlist=False):
     # Examples:

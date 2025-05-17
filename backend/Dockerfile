@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Set up environment vars
 ENV PYTHONUNBUFFERED=True
 ENV DATA_HOME=/data
+ENV GCS_BASE_URL=https://storage.googleapis.com/video-content-hub-data
 # ENV APP_HOME=/src/app
 
 # Copy the application code
