@@ -34,6 +34,15 @@ class SourceType(str, Enum):
     AUDIO = "audio"
     ARTICLE = "article"
 
+class JobType(str, Enum):
+    """
+    Represents the type of background jobs that can be run
+    """
+    IMPORT_SOURCE = "import_source"
+    TRANSCRIPT = "transcript"
+    TEXT_INSIGHTS = "text_insights"
+    IMAGE_INSIGHTS = "image_insights"        
+
 
 # ---
 # Generic Models
@@ -58,6 +67,10 @@ class SourceBase(BaseModel):
     url: Optional[str] = Field(default=None, max_length=255)
     source_type: str
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    import_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
+    transcript_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
+    text_insights_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
+    image_insights_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
 
 class SourceCreate(BaseModel):
     """Model for creating a new source."""
@@ -71,10 +84,6 @@ class SourceUpdate(SourceCreate):
 class SourcePublic(SourceBase):
     """Public representation of a source."""
     source_id: str
-
-class SourcesPublic(BaseModel):
-    """Public representation of an array of sources."""
-    data: list[SourcePublic]
 
 
 # ---
@@ -140,10 +149,6 @@ class StoryBase(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     description: str = Field(default='', max_length=255)
     script: Optional[str] = Field(default='')
-    asset_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
-    transcript_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
-    text_insights_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
-    image_insights_status: JobStatus = Field(default=JobStatus.NOT_STARTED)
 
 class StoryPublic(StoryBase):
     """
@@ -162,7 +167,7 @@ class StoriesPublic(BaseModel):
 
 class TranscriptBase(BaseModel):
     """Base model for a story."""
-    story_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    source_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     transcript: Optional[str]
 
 class TranscriptPublic(TranscriptBase):

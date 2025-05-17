@@ -1,7 +1,7 @@
 from typing import Tuple
 import os
 import subprocess
-from app.utils import create_folder
+from app.utils import create_folder, get_all_files_in_folder
 from yt_dlp import YoutubeDL
 
 def download_from_youtube(video_id: str, subfolder: str) -> Tuple[str, str, str]:
@@ -13,6 +13,14 @@ def download_from_youtube(video_id: str, subfolder: str) -> Tuple[str, str, str]
     audio_file = f"{folder}/{video_id}.audio.m4a"
     video_file = f"{folder}/{video_id}.video.mp4"
     
+    # Check to see if files already exist
+    files = get_all_files_in_folder(folder)
+    if combined_file in files and audio_file in files and video_file in files:
+        return combined_file, audio_file, video_file
+
+    # TODO: Fix the downloader; it only works locally. Workaround: upload manually.
+    raise RuntimeError()
+
     # Step 1: Download combined audio+video with yt_dlp
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',
